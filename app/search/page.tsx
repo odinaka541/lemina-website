@@ -1,154 +1,206 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, SlidersHorizontal } from 'lucide-react';
-import FilterSidebar from '@/components/search/FilterSidebar';
-import CompanyCard from '@/components/company/CompanyCard';
-import { ConfidenceTier } from '@/components/company/ConfidenceBadge';
+import { useState, useEffect, Suspense } from 'react';
+import Navbar from '@/components/Navbar';
+import { Search, Filter, Shield, ArrowRight, CheckCircle2 } from 'lucide-react';
+import CompanyCard, { CompanyCardProps } from '@/components/company/CompanyCard';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { mapCompanyToList } from '@/lib/api-mapper';
 
-// Mock Data
-const MOCK_COMPANIES = [
-    {
-        id: '1',
-        name: 'Paystack',
-        description: 'Modern online and offline payments for Africa.',
-        location: 'Lagos, Nigeria',
-        employees: 250,
-        funding: 'Acquired',
-        lastUpdated: '2h ago',
-        metrics: [
-            { label: "Funding Stage", value: "Acquired" },
-            { label: "Business Model", value: "B2B Payment Gateway" },
-            { label: "Traction Signals", value: "Processes 50% of Nigeria's online payments" },
-            { label: "Market Opportunity", value: "Dominating African payment infrastructure" },
-            { label: "Why Promising?", value: "Deep local bank integration and reliability" },
-            { label: "Regulatory Status", value: "Fully Licensed (CBN)" }
-        ]
-    },
-    {
-        id: '2',
-        name: 'Flutterwave',
-        description: 'Simplifying payments for endless possibilities.',
-        location: 'Lagos, Nigeria',
-        employees: 500,
-        funding: 'Series D',
-        lastUpdated: '5h ago',
-        metrics: [
-            { label: "Funding Stage", value: "Series D" },
-            { label: "Business Model", value: "Payment Infrastructure" },
-            { label: "Traction Signals", value: "Unicorn status, broad Pan-African presence" },
-            { label: "Market Opportunity", value: "Connecting Africa to global economy" },
-            { label: "Why Promising?", value: "Extensive partnerships network" },
-            { label: "Regulatory Status", value: "Various Licenses" }
-        ]
-    },
-    {
-        id: '3',
-        name: 'Chipper Cash',
-        description: 'Cross-border payments and crypto wallet.',
-        location: 'Accra, Ghana',
-        employees: 300,
-        funding: 'Series C',
-        lastUpdated: '1d ago',
-        metrics: [
-            { label: "Funding Stage", value: "Series C" },
-            { label: "Business Model", value: "P2P & B2C Payments" },
-            { label: "Traction Signals", value: "5M+ Verified Users" },
-            { label: "Market Opportunity", value: "Cross-border African remittance" },
-            { label: "Why Promising?", value: "Strong brand and user growth" },
-            { label: "Regulatory Status", value: "Licensed in multiple markets" }
-        ]
-    },
-    {
-        id: '4',
-        name: 'M-KOPA',
-        description: 'Connected asset financing for underbanked customers.',
-        location: 'Nairobi, Kenya',
-        employees: 1000,
-        funding: 'Debt Financing',
-        lastUpdated: '3d ago',
-        metrics: [
-            { label: "Funding Stage", value: "Debt Financing" },
-            { label: "Business Model", value: "Asset Financing / PAYG" },
-            { label: "Traction Signals", value: "3M+ Customers, >$1B financing deployed" },
-            { label: "Market Opportunity", value: "Credit for the underbanked millions" },
-            { label: "Why Promising?", value: "Proprietary locking tech & repayment data" },
-            { label: "Regulatory Status", value: "Compliant" }
-        ]
-    },
-    {
-        id: '5',
-        name: 'Andela',
-        description: 'Global talent network connecting engineers with companies.',
-        location: 'Remote / Lagos',
-        employees: 1500,
-        funding: 'Series E',
-        lastUpdated: '1w ago',
-        metrics: [
-            { label: "Funding Stage", value: "Series E" },
-            { label: "Business Model", value: "Talent Marketplace" },
-            { label: "Traction Signals", value: "100k+ Engineers, Global Clients" },
-            { label: "Market Opportunity", value: "Remote work and global talent shortage" },
-            { label: "Why Promising?", value: "High quality vetting process" },
-            { label: "Regulatory Status", value: "N/A" }
-        ]
-    },
-    {
-        id: '6',
-        name: 'Wasoko',
-        description: 'Transforming informal retail supply chains in Africa.',
-        location: 'Nairobi, Kenya',
-        employees: 800,
-        funding: 'Series B',
-        lastUpdated: '2d ago',
-        metrics: [
-            { label: "Funding Stage", value: "Series B" },
-            { label: "Business Model", value: "B2B E-commerce" },
-            { label: "Traction Signals", value: "Huge network of informal retailers" },
-            { label: "Market Opportunity", value: "Digitizing the informal economy" },
-            { label: "Why Promising?", value: "Strong last-mile delivery infrastructure" },
-            { label: "Regulatory Status", value: "Active" }
-        ]
-    }
-];
-
+// Main Component Wrapper for Suspense
 export default function SearchPage() {
     return (
-        <div className="container mx-auto px-4 pt-8 pb-8">
-            <div className="flex flex-col lg:flex-row gap-8">
-                {/* Sidebar */}
-                <FilterSidebar />
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading search...</div>}>
+            <SearchPageContent />
+        </Suspense>
+    );
+}
 
-                {/* Main Content */}
-                <div className="flex-1">
-                    {/* Search Header */}
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-white mb-4">Discover Companies</h1>
-                        <div className="flex gap-4">
-                            <div className="flex-1 relative">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                <input
-                                    type="text"
-                                    placeholder="Search by name, sector, or keyword..."
-                                    className="w-full bg-[rgba(255,255,255,0.05)] border border-[var(--color-border)] rounded-xl py-3 pl-12 pr-4 text-white focus:border-[var(--color-accent-primary)] focus:ring-1 focus:ring-[var(--color-accent-primary)] transition-all outline-none"
-                                />
+function SearchPageContent() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Get active filters from URL
+    const activeSector = searchParams.get('sector') || 'All';
+    const activeVerification = searchParams.get('verification') || 'All';
+    const searchQuery = searchParams.get('q') || '';
+
+    const [companies, setCompanies] = useState<CompanyCardProps[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch when filters change
+    useEffect(() => {
+        async function fetchResults() {
+            setIsLoading(true);
+            try {
+                // Construct query string
+                const params = new URLSearchParams();
+                if (activeSector !== 'All') params.set('sector', activeSector);
+                if (activeVerification !== 'All') params.set('verification', activeVerification.toLowerCase());
+                if (searchQuery) params.set('search', searchQuery); // Assuming API supports search param? Not yet in route.ts but user might expect it.
+                // Note: route.ts currently filters by sector and verification. Search text support might be needed later.
+
+                const res = await fetch(`/api/companies?${params.toString()}`);
+                if (!res.ok) throw new Error('Fetch failed');
+                const json = await res.json();
+
+                // Map API data to component props
+                if (json.data && Array.isArray(json.data)) {
+                    setCompanies(json.data.map(mapCompanyToList));
+                } else {
+                    setCompanies([]);
+                }
+
+            } catch (err) {
+                console.error(err);
+                setCompanies([]);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchResults();
+    }, [activeSector, activeVerification, searchQuery]);
+
+
+    // Update URL helper
+    const updateFilter = (key: string, value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value === 'All') {
+            params.delete(key);
+        } else {
+            params.set(key, value);
+        }
+        router.push(`/search?${params.toString()}`);
+    };
+
+    return (
+        <div className="min-h-screen bg-[var(--color-bg-primary)]">
+            <Navbar />
+
+            <main className="container mx-auto px-4 py-8">
+                {/* Search Header */}
+                <div className="max-w-4xl mx-auto mb-10 text-center">
+                    <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-4">
+                        Find Verified African Companies
+                    </h1>
+
+                    {/* Search Bar */}
+                    <div className="relative max-w-2xl mx-auto">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Search by name, sector, or investors..."
+                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-[var(--input-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] transition-colors placeholder:text-[var(--color-text-secondary)]/50"
+                            defaultValue={searchQuery}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    updateFilter('q', e.currentTarget.value);
+                                }
+                            }}
+                        />
+                    </div>
+                </div>
+
+                {/* Filters */}
+                <div className="flex flex-col md:flex-row gap-8">
+                    {/* Sidebar Filters */}
+                    <div className="w-full md:w-64 flex-shrink-0 space-y-8">
+                        {/* Sector Filter */}
+                        <div>
+                            <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+                                <Filter size={14} />
+                                Sector
+                            </h3>
+                            <div className="space-y-2">
+                                {['All', 'Fintech', 'Logistics', 'Healthtech', 'Cleantech', 'AgriTech'].map(sector => (
+                                    <button
+                                        key={sector}
+                                        onClick={() => updateFilter('sector', sector)}
+                                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${activeSector === sector
+                                                ? 'bg-[var(--color-accent-primary)] text-white font-medium'
+                                                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
+                                            }`}
+                                    >
+                                        {sector}
+                                    </button>
+                                ))}
                             </div>
-                            <button className="lg:hidden p-3 bg-[rgba(255,255,255,0.05)] border border-[var(--color-border)] rounded-xl text-white">
-                                <SlidersHorizontal size={20} />
-                            </button>
+                        </div>
+
+                        {/* Verification Filter */}
+                        <div>
+                            <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+                                <Shield size={14} />
+                                Verification
+                            </h3>
+                            <div className="space-y-2">
+                                {['All', 'Verified', 'Self-Reported'].map(status => (
+                                    <label key={status} className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] cursor-pointer group">
+                                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${activeVerification === status
+                                                ? 'bg-[var(--color-accent-primary)] border-[var(--color-accent-primary)]'
+                                                : 'border-[var(--color-border)] group-hover:border-[var(--color-text-secondary)]'
+                                            }`}>
+                                            {activeVerification === status && <CheckCircle2 size={10} className="text-white" />}
+                                        </div>
+                                        <button onClick={() => updateFilter('verification', status)}>{status}</button>
+                                    </label>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
                     {/* Results Grid */}
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                        {MOCK_COMPANIES.map(company => (
-                            <CompanyCard key={company.id} {...company} />
-                        ))}
+                    <div className="flex-1">
+                        <div className="flex justify-between items-center mb-4">
+                            <p className="text-sm text-[var(--color-text-secondary)]">
+                                Showing <span className="font-bold text-[var(--color-text-primary)]">{companies.length}</span> results
+                            </p>
+
+                            {/* Sort Dropdown (Visual only for now) */}
+                            <button className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
+                                Sort by: Recommended <ArrowRight size={14} className="rotate-90" />
+                            </button>
+                        </div>
+
+                        {isLoading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {[1, 2, 3, 4, 5, 6].map(n => (
+                                    <div key={n} className="h-64 bg-[var(--card-bg)] rounded-xl border border-[var(--color-border)] animate-pulse" />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {companies.map(company => (
+                                    <CompanyCard key={company.id} {...company} />
+                                ))}
+
+                                {companies.length === 0 && (
+                                    <div className="col-span-full py-12 text-center text-[var(--color-text-secondary)] bg-[var(--card-bg)] rounded-xl border border-[var(--color-border)] border-dashed">
+                                        <p>No companies found matching your criteria.</p>
+                                        <button
+                                            onClick={() => router.push('/search')}
+                                            className="mt-2 text-[var(--color-accent-primary)] hover:underline text-sm"
+                                        >
+                                            Clear filters
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Pagination (Visual) */}
+                        {!isLoading && companies.length > 0 && (
+                            <div className="mt-8 flex justify-center gap-2">
+                                <button className="px-3 py-1 rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]" disabled>Prev</button>
+                                <button className="px-3 py-1 rounded bg-[var(--color-accent-primary)] text-white">1</button>
+                                <button className="px-3 py-1 rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]">2</button>
+                                <button className="px-3 py-1 rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]">Next</button>
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
-            {/* Bottom Spacer */}
-            <div className="h-32 w-full" aria-hidden="true" />
+            </main>
         </div>
     );
 }

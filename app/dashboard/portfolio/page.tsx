@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, PieChart as PieChartIcon, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import AllocationChart from '@/components/portfolio/AllocationChart';
@@ -69,6 +70,45 @@ const PORTFOLIO_COMPANIES = [
 ];
 
 export default function PortfolioPage() {
+    const [portfolioCompanies, setPortfolioCompanies] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                // Fetch "portfolio" companies (just first 5 for demo)
+                const res = await fetch('/api/companies?limit=5');
+                const json = await res.json();
+
+                if (json.data) {
+                    // Enhance API data with mock investment stats for the demo
+                    const enhanced = json.data.map((c: any, i: number) => ({
+                        id: c.id,
+                        name: c.name,
+                        logo: c.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random`,
+                        investedDate: ['Dec 2023', 'Jan 2024', 'Feb 2024', 'Mar 2024', 'Apr 2024'][i % 5],
+                        amount: ['$50k', '$100k', '$25k', '$200k', '$80k'][i % 5],
+                        ownership: ['0.5%', '1.2%', '0.2%', '2.5%', '0.8%'][i % 5],
+                        currentValue: ['$1.2M', '$3.5M', '$30k', '$2.1M', '$95k'][i % 5], // Mock valuation
+                        moic: ['2.1x', '3.5x', '1.0x', '1.5x', '0.9x'][i % 5],
+                        trend: i % 2 === 0 ? 'up' : 'down',
+                        tier: c.verification?.overall_tier || 1, // Fallback
+                        score: c.verification?.data_quality_score || 50
+                    }));
+                    setPortfolioCompanies(enhanced);
+                }
+            } catch (error) {
+                console.error("Failed to load portfolio", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
+
+    // Mock stats based on "enhanced" data or just static for now as requested by user constraints to just "Connect"
+    // I will leave stats static for simplicity unless I want to calculate them. Static is safer for layout stability.
+
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-end mb-8">
@@ -143,7 +183,11 @@ export default function PortfolioPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {PORTFOLIO_COMPANIES.map((company) => (
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={7} className="p-8 text-center text-[var(--color-text-secondary)]">Loading portfolio...</td>
+                                </tr>
+                            ) : portfolioCompanies.map((company) => (
                                 <tr key={company.id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[rgba(255,255,255,0.02)] transition-colors">
                                     <td className="p-4">
                                         <div className="flex items-center gap-3">

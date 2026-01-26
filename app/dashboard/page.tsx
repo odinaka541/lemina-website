@@ -2,8 +2,9 @@
 
 import { ArrowRight, TrendingUp, Activity, Globe, Zap } from 'lucide-react';
 import Link from 'next/link';
-import CompanyCard from '@/components/company/CompanyCard';
-import { ConfidenceTier } from '@/components/company/ConfidenceBadge';
+import { useState, useEffect } from 'react';
+import CompanyCard, { CompanyCardProps } from '@/components/company/CompanyCard';
+import { mapCompanyToList } from '@/lib/api-mapper';
 
 // Mock Data (Reusing some from Search Page for consistency)
 const RECOMMENDED_COMPANIES = [
@@ -171,6 +172,33 @@ function StatWidget({ icon: Icon, label, value, trend, color }: any) {
 }
 
 export default function DashboardPage() {
+    const [companies, setCompanies] = useState<CompanyCardProps[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchCompanies() {
+            try {
+                const res = await fetch('/api/companies?limit=10');
+                if (!res.ok) throw new Error('Failed to fetch');
+                const json = await res.json();
+
+                // Use the mapper utility
+                const mapped = json.data.map(mapCompanyToList);
+                setCompanies(mapped);
+            } catch (error) {
+                console.error('Dashboard Fetch Error:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchCompanies();
+    }, []);
+
+    // Split into "Recommended" and "Trending" for UI variety (just slicing for now)
+    const recommended = companies.slice(0, 4);
+    const trending = companies.slice(4, 8);
+
     return (
         <div className="container mx-auto px-4 pt-8 pb-8 space-y-8">
             {/* Header */}
@@ -210,7 +238,7 @@ export default function DashboardPage() {
                 <StatWidget
                     icon={Zap}
                     label="New Opportunities"
-                    value="24"
+                    value={isLoading ? "..." : companies.length.toString()}
                     trend="Matches your thesis"
                     color="amber"
                 />
@@ -231,11 +259,21 @@ export default function DashboardPage() {
                                 View all <ArrowRight size={14} />
                             </Link>
                         </div>
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                            {RECOMMENDED_COMPANIES.map(company => (
-                                <CompanyCard key={company.id} {...company} />
-                            ))}
-                        </div>
+
+                        {isLoading ? (
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                {[1, 2, 3, 4].map(n => (
+                                    <div key={n} className="h-48 bg-[var(--card-bg)] rounded-xl animate-pulse border border-[var(--color-border)]"></div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                {recommended.map(company => (
+                                    <CompanyCard key={company.id} {...company} />
+                                ))}
+                                {recommended.length === 0 && <p className="text-[var(--color-text-secondary)]">No recommended companies found.</p>}
+                            </div>
+                        )}
                     </section>
 
                     {/* Trending Section */}
@@ -246,11 +284,19 @@ export default function DashboardPage() {
                                 Trending in Network
                             </h2>
                         </div>
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                            {TRENDING_COMPANIES.map(company => (
-                                <CompanyCard key={company.id} {...company} />
-                            ))}
-                        </div>
+                        {isLoading ? (
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                {[1, 2].map(n => (
+                                    <div key={n} className="h-48 bg-[var(--card-bg)] rounded-xl animate-pulse border border-[var(--color-border)]"></div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                {trending.map(company => (
+                                    <CompanyCard key={company.id} {...company} />
+                                ))}
+                            </div>
+                        )}
                     </section>
                 </div>
 

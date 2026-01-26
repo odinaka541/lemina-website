@@ -42,7 +42,7 @@ export default function DashboardLayout({
             </div>
 
             {/* Main Content */}
-            <main className="lg:pl-64 min-h-screen flex flex-col">
+            <main className="lg:pl-60 min-h-screen flex flex-col">
                 {/* Desktop Header */}
                 <header className="hidden lg:flex h-16 border-b border-[var(--color-border)] items-center justify-between px-8 sticky top-0 bg-[#030712]/80 backdrop-blur-md z-40">
                     <div className="flex-1 max-w-xl">

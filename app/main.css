@@ -113,6 +113,15 @@ body {
     color: var(--color-accent-primary);
 }
 
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
 /* Background Effects */
 .gradient-bg {
     position: fixed;

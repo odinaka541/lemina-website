@@ -1,34 +1,58 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, DollarSign, FileText, MessageSquare, Clock, CheckCircle2, MoreHorizontal, Paperclip } from 'lucide-react';
 import ConfidenceBadge, { ConfidenceTier } from '@/components/company/ConfidenceBadge';
 
 export default function DealPage({ params }: { params: { id: string } }) {
     const [activeTab, setActiveTab] = useState('notes');
+    const [deal, setDeal] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Mock Data
-    const DEAL = {
-        id: params.id,
-        companyName: 'Paystack',
-        logo: 'https://api.dicebear.com/7.x/initials/svg?seed=Paystack',
-        amount: '$200,000',
-        stage: 'Due Diligence',
-        probability: 60,
-        closeDate: 'Dec 15, 2025',
-        owner: 'Odinaka',
-        tier: ConfidenceTier.CACVerified,
-        score: 98,
-        notes: [
-            { id: 1, author: 'Odinaka', text: 'Spoke with Shola. They are planning to expand to Egypt next quarter. Unit economics look strong.', date: '2h ago' },
-            { id: 2, author: 'System', text: 'Deal moved to Due Diligence stage.', date: '1d ago' }
-        ],
-        documents: [
-            { id: 1, name: 'Pitch Deck.pdf', size: '2.4 MB', date: '3d ago' },
-            { id: 2, name: 'Financial Model.xlsx', size: '1.1 MB', date: '3d ago' }
-        ]
-    };
+    useEffect(() => {
+        async function fetchDeal() {
+            try {
+                const res = await fetch(`/api/companies/${params.id}`);
+                const data = await res.json();
+
+                if (data) {
+                    // Mix real company data with mock deal logic
+                    setDeal({
+                        id: data.id,
+                        companyName: data.name,
+                        logo: data.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random`,
+                        amount: '$200,000', // Mock
+                        stage: 'Due Diligence', // Mock
+                        probability: 60, // Mock
+                        closeDate: 'Dec 15, 2025', // Mock
+                        owner: 'Odinaka', // Mock
+                        tier: data.verification?.overall_tier || 1,
+                        score: data.verification?.data_quality_score || 50,
+                        notes: [
+                            { id: 1, author: 'Odinaka', text: `Evaluating ${data.name} for Series A participation.`, date: '2h ago' },
+                            { id: 2, author: 'System', text: 'Deal moved to Due Diligence stage.', date: '1d ago' }
+                        ],
+                        documents: [
+                            { id: 1, name: 'Pitch Deck.pdf', size: '2.4 MB', date: '3d ago' },
+                            { id: 2, name: 'Financial Model.xlsx', size: '1.1 MB', date: '3d ago' }
+                        ]
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch deal", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchDeal();
+    }, [params.id]);
+
+    if (isLoading) return <div className="p-8 text-center text-[var(--color-text-secondary)]">Loading deal...</div>;
+    if (!deal) return <div className="p-8 text-center text-[var(--color-text-secondary)]">Deal not found.</div>;
+
+    const DEAL = deal; // Re-use existing variable name to minimize refactor
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -98,8 +122,8 @@ export default function DealPage({ params }: { params: { id: string } }) {
                     <div className="glass-panel p-5">
                         <h3 className="font-bold text-[var(--color-text-primary)] mb-4">Documents</h3>
                         <div className="space-y-3">
-                            {DEAL.documents.map(doc => (
-                                <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--input-bg)] border border-[var(--color-border)] hover:border-[var(--color-accent-primary)] transition-colors cursor-pointer group">
+                            {DEAL.documents.map((doc: any) => (
+                                <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--input-bg)] border border-[var(--color-border)] hover:border-[var(--color-accent-primary)] transition-colors cursor-pointer group">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]">
                                             <FileText size={18} />
@@ -138,7 +162,7 @@ export default function DealPage({ params }: { params: { id: string } }) {
 
                         <div className="p-6 flex-1 flex flex-col">
                             <div className="flex-1 space-y-6 mb-6">
-                                {DEAL.notes.map(note => (
+                                {DEAL.notes.map((note: any) => (
                                     <div key={note.id} className="flex gap-4">
                                         <div className="w-8 h-8 rounded-full bg-[var(--color-accent-primary)] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                                             {note.author[0]}

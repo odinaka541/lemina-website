@@ -10,7 +10,7 @@ interface CompanyMetric {
     // score: number;
 }
 
-interface CompanyCardProps {
+export interface CompanyCardProps {
     id: string;
     name: string;
     description: string;

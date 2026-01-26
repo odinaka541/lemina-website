@@ -46,7 +46,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
             {/* Sidebar */}
             <aside
-                className={`fixed top-0 bottom-0 left-0 w-64 bg-[#030712]/80 backdrop-blur-xl border-r border-[var(--color-border)] flex flex-col z-50 transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+                className={`fixed top-0 bottom-0 left-0 w-60 bg-[#030712]/80 backdrop-blur-xl border-r border-[var(--color-border)] flex flex-col z-50 transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
             >
                 {/* Logo */}

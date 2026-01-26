@@ -1,26 +1,16 @@
 'use client';
 
 import { Draggable } from '@hello-pangea/dnd';
-import { Calendar, DollarSign, MoreHorizontal } from 'lucide-react';
-import Link from 'next/link';
-import ConfidenceBadge, { ConfidenceTier } from '@/components/company/ConfidenceBadge';
+import { Calendar, DollarSign, MoreHorizontal, Clock, FileText, CheckSquare, Timer } from 'lucide-react';
+import { Deal } from '@/types';
 
 interface DealCardProps {
-    deal: {
-        id: string;
-        companyName: string;
-        amount: string;
-        stage: string;
-        probability: number;
-        closeDate: string;
-        logo: string;
-        tier: ConfidenceTier;
-        score: number;
-    };
+    deal: Deal;
     index: number;
+    onClick: (deal: Deal) => void;
 }
 
-export default function DealCard({ deal, index }: DealCardProps) {
+export default function DealCard({ deal, index, onClick }: DealCardProps) {
     return (
         <Draggable draggableId={deal.id} index={index}>
             {(provided, snapshot) => (
@@ -28,58 +18,90 @@ export default function DealCard({ deal, index }: DealCardProps) {
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className={`p-4 rounded-xl border mb-3 transition-all group ${snapshot.isDragging
-                            ? 'bg-[var(--color-bg-secondary)] border-[var(--color-accent-primary)] shadow-2xl scale-105 z-50'
-                            : 'bg-[rgba(255,255,255,0.03)] border-[var(--color-border)] hover:border-[rgba(255,255,255,0.2)]'
+                    onClick={() => onClick(deal)}
+                    className={`p-5 rounded-xl border mb-4 transition-all group cursor-pointer relative overflow-hidden bg-[var(--card-bg)] ${snapshot.isDragging
+                        ? 'border-[var(--color-accent-primary)] shadow-2xl scale-105 z-50 ring-1 ring-[var(--color-accent-primary)]'
+                        : 'border-[var(--color-border)] hover:border-[var(--color-accent-primary)] hover:shadow-lg hover:-translate-y-0.5'
                         }`}
                     style={provided.draggableProps.style}
                 >
-                    <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-white p-1 flex items-center justify-center">
-                                <img src={deal.logo} alt={deal.companyName} className="w-full h-full object-contain" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-white text-sm">{deal.companyName}</h4>
-                                <div className="flex items-center gap-1 mt-0.5">
-                                    <ConfidenceBadge tier={deal.tier} score={deal.score} showLabel={false} className="scale-75 origin-left" />
-                                </div>
-                            </div>
+                    {/* Header: Logo & Name */}
+                    <div className="flex items-start gap-4 mb-5">
+                        <div className="w-10 h-10 rounded-lg bg-white p-1.5 flex items-center justify-center shrink-0 border border-[var(--color-border)] shadow-sm">
+                            <img src={deal.logo} alt={deal.companyName} className="w-full h-full object-contain" />
                         </div>
-                        <button className="text-[var(--color-text-secondary)] hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreHorizontal size={16} />
+                        <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-[var(--color-text-primary)] text-base leading-tight truncate">{deal.companyName}</h4>
+                            <a href={`https://${deal.website}`} onClick={e => e.stopPropagation()} className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)] transition-colors truncate block mt-0.5 hover:underline">
+                                {deal.website || 'lemina.com'}
+                            </a>
+                        </div>
+                        <button className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors p-1 -mr-2 -mt-2 opacity-0 group-hover:opacity-100">
+                            <MoreHorizontal size={18} />
                         </button>
                     </div>
 
-                    <div className="space-y-2 mb-3">
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="text-[var(--color-text-secondary)] flex items-center gap-1">
-                                <DollarSign size={14} /> Amount
-                            </span>
-                            <span className="text-white font-mono">{deal.amount}</span>
+                    {/* Fields Stack */}
+                    <div className="space-y-4">
+                        {/* Owner */}
+                        <div>
+                            <div className="text-[11px] text-[var(--color-text-secondary)] mb-1">Owner</div>
+                            <div className="text-sm font-medium text-[var(--color-text-primary)]">{deal.ownerName || 'Odinaka'}</div>
                         </div>
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="text-[var(--color-text-secondary)] flex items-center gap-1">
-                                <Calendar size={14} /> Close
-                            </span>
-                            <span className="text-white">{deal.closeDate}</span>
+
+                        {/* Priority */}
+                        <div>
+                            <div className="text-[11px] text-[var(--color-text-secondary)] mb-1">Priority</div>
+                            <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-primary)]">
+                                <div className={`w-2 h-2 rounded-full ${deal.priority === 'High' ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]' :
+                                    deal.priority === 'Medium' ? 'bg-amber-500' : 'bg-slate-400'
+                                    }`} />
+                                {deal.priority || 'Medium'}
+                            </div>
+                        </div>
+
+                        {/* Last Contact */}
+                        <div>
+                            <div className="text-[11px] text-[var(--color-text-secondary)] mb-1">Last Contact</div>
+                            <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                                {deal.lastContact?.split('ago')[0] + 'ago' || '2 days ago'} <span className="text-[var(--color-text-secondary)] font-normal">({new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})</span>
+                            </div>
+                        </div>
+
+                        {/* Next Steps */}
+                        <div>
+                            <div className="text-[11px] text-[var(--color-text-secondary)] mb-1">Next Steps</div>
+                            <p className="text-sm text-[var(--color-text-primary)] leading-relaxed line-clamp-3">
+                                {deal.nextSteps || "Review latest financials and schedule follow-up call."}
+                            </p>
+                        </div>
+
+                        {/* Industry */}
+                        <div>
+                            <div className="text-[11px] text-[var(--color-text-secondary)] mb-2">Industry</div>
+                            <div className="flex flex-wrap gap-2">
+                                {(deal.industry || ['Tech']).slice(0, 2).map(tag => (
+                                    <span key={tag} className="px-2.5 py-1 rounded-md text-xs font-medium bg-[var(--input-bg)] text-[var(--color-text-primary)] border border-[var(--color-border)]">
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="w-full bg-[rgba(255,255,255,0.1)] h-1.5 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full rounded-full ${deal.probability > 75 ? 'bg-emerald-500' :
-                                    deal.probability > 40 ? 'bg-amber-500' : 'bg-red-500'
-                                }`}
-                            style={{ width: `${deal.probability}%` }}
-                        />
+                    {/* Footer */}
+                    <div className="mt-5 pt-4 border-t border-[var(--color-border)] flex items-center justify-between">
+                        <div className="flex gap-3 text-[var(--color-text-secondary)]">
+                            <FileText size={16} className="hover:text-[var(--color-text-primary)] cursor-pointer transition-colors" />
+                            <Calendar size={16} className="hover:text-[var(--color-text-primary)] cursor-pointer transition-colors" />
+                            <Timer size={16} className="hover:text-[var(--color-text-primary)] cursor-pointer transition-colors" />
+                            <CheckSquare size={16} className="hover:text-[var(--color-text-primary)] cursor-pointer transition-colors" />
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-text-secondary)]">
+                            <Clock size={14} />
+                            <span>1hr</span>
+                        </div>
                     </div>
-                    <div className="flex justify-between mt-1">
-                        <span className="text-[10px] text-[var(--color-text-secondary)]">Probability</span>
-                        <span className="text-[10px] font-medium text-white">{deal.probability}%</span>
-                    </div>
-
-                    <Link href={`/dashboard/deals/${deal.id}`} className="absolute inset-0" />
                 </div>
             )}
         </Draggable>
