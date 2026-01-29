@@ -12,6 +12,8 @@ import MarketTab from '@/components/company/tabs/MarketTab';
 import TeamLegalTab from '@/components/company/tabs/TeamLegalTab';
 import CommercialsTab from '@/components/company/tabs/CommercialsTab';
 import NewsTab from '@/components/company/tabs/NewsTab';
+import AIAnalysisCard from '@/components/market/AIAnalysisCard';
+
 
 const TABS = [
     { id: 'overview', label: 'Overview' },
@@ -173,8 +175,9 @@ export default function CompanyPage() {
                             </div>
                         </div>
 
-                        <div className="hidden lg:block w-full max-w-xs">
-                            <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm h-full min-h-[120px] flex flex-col relative">
+                        <div className="hidden lg:flex w-full max-w-2xl gap-4 h-48">
+                            {/* Private Notes */}
+                            <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm h-full min-h-[120px] flex flex-col relative flex-1">
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="text-[10px] font-bold text-slate-700 flex items-center gap-2 uppercase tracking-wide">
                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
@@ -190,6 +193,11 @@ export default function CompanyPage() {
                                         <Plus size={14} />
                                     </button>
                                 </div>
+                            </div>
+
+                            {/* AI Analysis Button/Card */}
+                            <div className="flex-1 min-w-[300px]">
+                                <AIAnalysisCard companyId={company.id} />
                             </div>
                         </div>
                     </div>

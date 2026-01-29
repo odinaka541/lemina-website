@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import BrandLogo from '@/components/ui/BrandLogo'
 
 export default function AppLayout({
   children,
@@ -48,10 +49,7 @@ export default function AppLayout({
         zIndex: 50
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Link href="/app/companies" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
-            <img src="/assets/lemina.svg" alt="Lemina" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
-            <span style={{ color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '1.125rem' }}>Lemina Dashboard</span>
-          </Link>
+          <BrandLogo />
         </div>
 
         <div className="nav-links" style={{ display: 'flex', gap: '2rem' }}>

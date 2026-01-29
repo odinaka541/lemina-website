@@ -3,6 +3,7 @@
 import React from 'react';
 import { Page, Footer, Badge, StatBox, FeatureCard, WorkflowStep, ProfileMetric } from '@/components/report/ReportComponents';
 import { TableOfContents } from '@/components/report/TableOfContents';
+import BrandLogo from '@/components/ui/BrandLogo';
 import { reportData } from './data';
 
 export default function SampleReport() {
@@ -27,9 +28,7 @@ export default function SampleReport() {
 
             {/* PAGE 1: COVER */}
             <Page id="cover" className="bg-gradient-to-br from-emerald-900 to-slate-900 print:from-emerald-500 print:to-emerald-700 text-white justify-center items-center text-center !p-0 print:!m-0 border-none animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-8">
-                    <img src="/assets/lemina.svg" alt="Lemina" className="w-16 h-16" />
-                </div>
+                <BrandLogo showText={false} iconSize="w-16 h-16" className="mb-8" />
                 <h1 className="text-5xl font-extrabold mb-6 leading-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-emerald-200 print:text-white print:bg-none">{cover.title}</h1>
                 <div className="text-2xl opacity-90 mb-10 text-emerald-100">{cover.subtitle}</div>
                 <div className="bg-white/10 px-6 py-3 rounded-full text-lg font-semibold mb-16 border border-white/10">

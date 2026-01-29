@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import BrandLogo from '@/components/ui/BrandLogo'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -54,18 +55,8 @@ export default function LoginPage() {
         maxWidth: '450px'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <Link href="/" style={{ textDecoration: 'none' }}>
-            <img
-              src="/assets/lemina.svg"
-              alt="Lemina"
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                marginBottom: '1rem',
-                display: 'inline-block'
-              }}
-            />
+          <div className="flex flex-col items-center justify-center">
+            <BrandLogo showText={false} iconSize="w-12 h-12" className="mb-4" />
             <h1 style={{
               fontSize: '1.75rem',
               fontWeight: 700,
@@ -74,7 +65,7 @@ export default function LoginPage() {
             }}>
               Investor Dashboard
             </h1>
-          </Link>
+          </div>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem' }}>
             Access detailed company data and intelligence reports
           </p>

@@ -1,298 +1,221 @@
 'use client';
 
-import { ArrowRight, TrendingUp, Activity, Globe, Zap } from 'lucide-react';
+import { TrendingUp, Activity, Globe, Zap, Search, ArrowRight, Wallet, Building2, Plus, ArrowUpRight, CheckCircle2, BellRing } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import CompanyCard, { CompanyCardProps } from '@/components/company/CompanyCard';
 import { mapCompanyToList } from '@/lib/api-mapper';
+import { Task } from '@/lib/types';
 
-// Mock Data (Reusing some from Search Page for consistency)
-const RECOMMENDED_COMPANIES = [
-    {
-        id: '1',
-        name: 'Paystack',
-        description: 'Modern online and offline payments for Africa.',
-        location: 'Lagos, Nigeria',
-        logo: null,
-        employees: 250,
-
-        funding: 'Acquired',
-        flags: ['ng'],
-        lastUpdated: '2h ago',
-        metrics: [
-            { label: "Funding Stage", value: "Acquired" },
-            { label: "Business Model", value: "B2B Payment Gateway" },
-            { label: "Traction Signals", value: "Processes 50% of Nigeria's online payments" },
-            { label: "Market Opportunity", value: "Dominating African payment infrastructure" },
-            { label: "Why Promising?", value: "Deep local bank integration and reliability" },
-            { label: "Regulatory Status", value: "Fully Licensed (CBN)" }
-        ]
-    },
-    {
-        id: '4',
-        name: 'M-KOPA',
-        description: 'Connected asset financing for underbanked customers.',
-        location: 'Nairobi, Kenya',
-        logo: null,
-        employees: 1000,
-
-        funding: 'Debt Financing',
-        flags: ['ke'],
-        lastUpdated: '3d ago',
-        metrics: [
-            { label: "Funding Stage", value: "Debt Financing" },
-            { label: "Business Model", value: "Asset Financing / PAYG" },
-            { label: "Traction Signals", value: "3M+ Customers, >$1B financing deployed" },
-            { label: "Market Opportunity", value: "Credit for the underbanked millions" },
-            { label: "Why Promising?", value: "Proprietary locking tech & repayment data" },
-            { label: "Regulatory Status", value: "Compliant" }
-        ]
-    },
-
-    {
-        id: '7',
-        name: 'Moniepoint',
-        description: 'All-in-one business banking solution for emerging markets.',
-        location: 'Lagos, Nigeria',
-        logo: null,
-        employees: 1200,
-
-        funding: 'Series C',
-        flags: ['ng'],
-        lastUpdated: '1d ago',
-        metrics: [
-            { label: "Funding Stage", value: "Series C" },
-            { label: "Business Model", value: "Business Banking & Payments" },
-            { label: "Traction Signals", value: "$12B+ Monthly TPV" },
-            { label: "Market Opportunity", value: "Banking for 40M+ MSMEs" },
-            { label: "Why Promising?", value: "Dominant offline distribution network" },
-            { label: "Regulatory Status", value: "Banking License" }
-        ]
-    },
-    {
-        id: '8',
-        name: 'Chowdeck',
-        description: 'Fastest food delivery service in Africa.',
-        location: 'Lagos, Nigeria',
-        logo: null,
-        employees: 150,
-
-        funding: 'Seed',
-        flags: ['ng'],
-        lastUpdated: '4h ago',
-        metrics: [
-            { label: "Funding Stage", value: "Seed" },
-            { label: "Business Model", value: "On-demand Delivery" },
-            { label: "Traction Signals", value: "300k+ Monthly Orders" },
-            { label: "Market Opportunity", value: "Hyper-local logistics" },
-            { label: "Why Promising?", value: "Best-in-class unit economics" },
-            { label: "Regulatory Status", value: "Operating" }
-        ]
-    },
-    {
-        id: '9',
-        name: 'Bamboo',
-        description: 'Real-time access to global investment opportunities.',
-        location: 'Lagos, Nigeria',
-        logo: null,
-        employees: 80,
-
-        funding: 'Series A',
-        flags: ['ng', 'gh'],
-        lastUpdated: '6h ago',
-        metrics: [
-            { label: "Funding Stage", value: "Series A" },
-            { label: "Business Model", value: "Wealth Tech / Brokerage" },
-            { label: "Traction Signals", value: "500k+ Registered Users" },
-            { label: "Market Opportunity", value: "Democratizing global access" },
-            { label: "Why Promising?", value: "Licensed in Nigeria & Ghana" },
-            { label: "Regulatory Status", value: "SEC Licensed" }
-        ]
-    }
-];
-
-const TRENDING_COMPANIES = [
-    {
-        id: '2',
-        name: 'Flutterwave',
-        description: 'Simplifying payments for endless possibilities.',
-        location: 'Lagos, Nigeria',
-        logo: null,
-        employees: 500,
-
-        funding: 'Series D',
-        flags: ['ng'],
-        lastUpdated: '5h ago',
-        metrics: [
-            { label: "Funding Stage", value: "Series D" },
-            { label: "Business Model", value: "Payment Infrastructure" },
-            { label: "Traction Signals", value: "Unicorn status, broad Pan-African presence" },
-            { label: "Market Opportunity", value: "Connecting Africa to global economy" },
-            { label: "Why Promising?", value: "Extensive partnerships network" },
-            { label: "Regulatory Status", value: "Various Licenses" }
-        ]
-    },
-    {
-        id: '6',
-        name: 'Wasoko',
-        description: 'Transforming informal retail supply chains in Africa.',
-        location: 'Nairobi, Kenya',
-        logo: null,
-        employees: 800,
-
-        funding: 'Series B',
-        flags: ['ke'],
-        lastUpdated: '2d ago',
-        metrics: [
-            { label: "Funding Stage", value: "Series B" },
-            { label: "Business Model", value: "B2B E-commerce" },
-            { label: "Traction Signals", value: "Huge network of informal retailers" },
-            { label: "Market Opportunity", value: "Digitizing the informal economy" },
-            { label: "Why Promising?", value: "Strong last-mile delivery infrastructure" },
-            { label: "Regulatory Status", value: "Active" }
-        ]
-    }
-];
-
-function StatWidget({ icon: Icon, label, value, trend, color }: any) {
-    return (
-        <div className="glass-panel p-5 flex items-center gap-4">
-            <div className={`p-3 rounded-xl bg-${color}-500/10 text-${color}-500`}>
-                <Icon size={24} />
-            </div>
-            <div>
-                <p className="text-sm text-[var(--color-text-secondary)]">{label}</p>
-                <div className="flex items-baseline gap-2">
-                    <h3 className="text-2xl font-bold text-[var(--color-text-primary)]">{value}</h3>
-                    <span className="text-xs text-emerald-500 font-medium">{trend}</span>
-                </div>
-            </div>
-        </div>
-    );
-}
+// New Components
+import StatCard from '@/components/dashboard/StatCard';
+import TaskActionCard from '@/components/dashboard/TaskActionCard';
+import ActivityFeed from '@/components/dashboard/ActivityFeed';
+import OnboardingState from '@/components/dashboard/OnboardingState';
+import FilterBar from '@/components/dashboard/FilterBar';
 
 export default function DashboardPage() {
     const [companies, setCompanies] = useState<CompanyCardProps[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [activities, setActivities] = useState<any[]>([]);
+    const [loadingActivities, setLoadingActivities] = useState(true);
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [stats, setStats] = useState({
+        total_deal_flow: 0,
+        active_diligence: 0,
+        market_cap: 0,
+        new_opportunities: 0,
+        completed_deals: 0 // Adding mocked field
+    });
+
+    const [user] = useState({ name: 'Odinaka' });
 
     useEffect(() => {
-        async function fetchCompanies() {
+        async function fetchData() {
             try {
-                const res = await fetch('/api/companies?limit=10');
-                if (!res.ok) throw new Error('Failed to fetch');
-                const json = await res.json();
+                // 1. Fetch Companies
+                const resCompanies = await fetch('/api/companies?limit=10');
+                if (resCompanies.ok) {
+                    const json = await resCompanies.json();
+                    setCompanies(json.data.map(mapCompanyToList));
+                }
 
-                // Use the mapper utility
-                const mapped = json.data.map(mapCompanyToList);
-                setCompanies(mapped);
+                // 2. Fetch Activities
+                const resActivities = await fetch('/api/activities');
+                if (resActivities.ok) {
+                    const json = await resActivities.json();
+                    setActivities(json.data);
+                }
+
+                // 3. Fetch Stats
+                const resStats = await fetch('/api/dashboard/stats');
+                if (resStats.ok) {
+                    const json = await resStats.json();
+                    // Mock completed_deals if missing from API
+                    if (json.completed_deals === undefined) json.completed_deals = 12;
+                    setStats(json);
+                }
+
+                // 4. Fetch Tasks (Pending Actions)
+                const resTasks = await fetch('/api/tasks');
+                if (resTasks.ok) {
+                    const json = await resTasks.json();
+                    setTasks(json.data || []);
+                }
             } catch (error) {
                 console.error('Dashboard Fetch Error:', error);
             } finally {
                 setIsLoading(false);
+                setLoadingActivities(false);
             }
         }
 
-        fetchCompanies();
+        fetchData();
     }, []);
 
-    // Split into "Recommended" and "Trending" for UI variety (just slicing for now)
     const recommended = companies.slice(0, 4);
     const trending = companies.slice(4, 8);
 
+    const isNewUser = stats.active_diligence === 0 && stats.market_cap === 0;
+
+    // Dynamic Greeting
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+
     return (
-        <div className="container mx-auto px-4 pt-8 pb-8 space-y-8">
-            {/* Header */}
-            <div className="flex justify-between items-end">
+        <div className="container mx-auto px-4 pt-32 pb-12 space-y-10">
+            {/* Header / Welcome */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">Dashboard</h1>
-                    <p className="text-[var(--color-text-secondary)]">Welcome back. Here's what's happening in the market.</p>
+                    <h1 className="text-3xl font-bold text-slate-900 mb-1 tracking-tight">
+                        {greeting}, {user.name}! <span className="ml-1">👋</span>
+                    </h1>
+                    <p className="text-slate-500 font-medium text-sm">
+                        Here's everything you missed.
+                    </p>
                 </div>
-                <div className="text-sm text-[var(--color-text-secondary)]">
-                    Last updated: <span className="text-[var(--color-text-primary)] font-mono">Just now</span>
+                <div className="flex items-center gap-4">
+                    <p className="text-xs text-slate-400 font-medium hidden md:block">
+                        Last updated: <span className="text-slate-600">Just now</span>
+                    </p>
+                    <Link
+                        href="/dashboard/pipeline?action=new"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all"
+                    >
+                        <Plus size={16} />
+                        New Deal
+                    </Link>
                 </div>
             </div>
 
-            {/* Market Snapshot */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatWidget
-                    icon={TrendingUp}
-                    label="Total Deal Flow"
-                    value="1,248"
-                    trend="+12% this week"
-                    color="emerald"
-                />
-                <StatWidget
+            {/* Stats Grid - 3 Horizontal Compact Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                {/* 1. Pending Actions (List View) */}
+                {/* 1. Pending Actions (List View) */}
+                <TaskActionCard tasks={tasks} />
+
+                {/* 2. Active Diligence */}
+                <StatCard
                     icon={Activity}
-                    label="Active Due Diligence"
-                    value="8"
-                    trend="2 closing soon"
-                    color="blue"
+                    label="Active Diligence"
+                    value={stats.active_diligence.toString()}
+                    subtext={stats.active_diligence > 0 ? "In progress now" : "No active pipeline"}
+                    color="gray"
+                    variant="compact"
+                    actionLabel="View Pipeline"
+                    actionLink="/dashboard/pipeline"
                 />
-                <StatWidget
-                    icon={Globe}
-                    label="Market Cap Tracked"
-                    value="$14.2B"
-                    trend="+5% MoM"
-                    color="purple"
-                />
-                <StatWidget
+
+                {/* 3. New Opportunities (Grayscale requested, Zap icon remains) */}
+                <StatCard
                     icon={Zap}
                     label="New Opportunities"
-                    value={isLoading ? "..." : companies.length.toString()}
-                    trend="Matches your thesis"
-                    color="amber"
+                    value={stats.new_opportunities.toString()}
+                    subtext="Added this week"
+                    color="gray" // Grayscale as requested
+                    variant="compact"
+                    actionLabel="View Companies"
+                    actionLink="/search?sort=newest"
                 />
             </div>
+
+            {/* Empty State vs Main Content */}
+            {isNewUser && !isLoading ? (
+                <OnboardingState />
+            ) : null}
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
                 {/* Left Column - Feeds */}
-                <div className="xl:col-span-3 space-y-8">
-                    {/* Recommended Section */}
+                <div className="xl:col-span-3 space-y-10">
+
+                    {/* Personalized Recommendations */}
                     <section>
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                                <Zap size={20} className="text-amber-500" />
-                                Recommended for You
-                            </h2>
-                            <Link href="/search" className="text-sm text-[var(--color-accent-primary)] hover:text-white transition-colors flex items-center gap-1">
-                                View all <ArrowRight size={14} />
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-1">
+                                    <Zap size={20} className="text-amber-500 fill-amber-500" />
+                                    Top Matches for Fintech Investors
+                                </h2>
+                                <p className="text-sm text-slate-500 font-medium">Here are companies that match your investment thesis.</p>
+                            </div>
+                            <Link
+                                href="/search?filter=recommended"
+                                className="text-sm font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                            >
+                                View All <ArrowRight size={14} />
                             </Link>
                         </div>
 
+                        {/* Phase 2: Filters */}
+                        <FilterBar />
+
                         {isLoading ? (
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                                {[1, 2, 3, 4].map(n => (
-                                    <div key={n} className="h-48 bg-[var(--card-bg)] rounded-xl animate-pulse border border-[var(--color-border)]"></div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[1, 2].map(n => (
+                                    <div key={n} className="h-[240px] bg-white rounded-2xl animate-pulse border border-slate-100"></div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                                {recommended.map(company => (
-                                    <CompanyCard key={company.id} {...company} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {recommended.slice(0, 2).map((company, i) => (
+                                    <CompanyCard
+                                        key={company.id}
+                                        {...company}
+                                        matchScore={i === 0 ? 98 : 95} // Mock Intelligence
+                                        isVerified={true} // Mock Verification
+                                    />
                                 ))}
-                                {recommended.length === 0 && <p className="text-[var(--color-text-secondary)]">No recommended companies found.</p>}
+                                {recommended.length === 0 && (
+                                    <div className="col-span-2 py-10 text-center border-2 border-dashed border-slate-200 rounded-xl">
+                                        <p className="text-slate-400">No recommendations available yet.</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </section>
 
                     {/* Trending Section */}
                     <section>
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                                <TrendingUp size={20} className="text-emerald-500" />
-                                Trending in Network
-                            </h2>
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-1">
+                                    <TrendingUp size={20} className="text-emerald-500" />
+                                    Trending in Network
+                                </h2>
+                                <p className="text-sm text-slate-500 font-medium">Rising stars with high investor momentum.</p>
+                            </div>
                         </div>
                         {isLoading ? (
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {[1, 2].map(n => (
-                                    <div key={n} className="h-48 bg-[var(--card-bg)] rounded-xl animate-pulse border border-[var(--color-border)]"></div>
+                                    <div key={n} className="h-[240px] bg-white rounded-2xl animate-pulse border border-slate-100"></div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                                {trending.map(company => (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {trending.slice(0, 2).map(company => (
                                     <CompanyCard key={company.id} {...company} />
                                 ))}
                             </div>
@@ -300,51 +223,14 @@ export default function DashboardPage() {
                     </section>
                 </div>
 
-                {/* Right Column - Activity & Quick Actions */}
+                {/* Right Column - Activity */}
                 <div className="space-y-6">
-                    {/* Recent Activity */}
-                    <div className="glass-panel p-4">
-                        <h3 className="font-bold text-[var(--color-text-primary)] mb-3 text-sm">Recent Activity</h3>
-                        <div className="space-y-3">
-                            {[
-                                { text: "Paystack released 2024 report", time: "2h ago", type: "report" },
-                                { text: "Flutterwave raised Series E", time: "5h ago", type: "funding" },
-                                { text: "New competitor for Chipper Cash", time: "1d ago", type: "alert" },
-                                { text: "M-KOPA expanded to Ghana", time: "2d ago", type: "news" }
-                            ].map((item, i) => (
-                                <div key={i} className="flex gap-2 items-start pb-3 border-b border-[var(--color-border)] last:border-0 last:pb-0">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent-primary)] mt-1.5 flex-shrink-0" />
-                                    <div>
-                                        <p className="text-xs text-[var(--color-text-secondary)] leading-tight">{item.text}</p>
-                                        <span className="text-[10px] text-[var(--color-text-secondary)] opacity-70">{item.time}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <button className="w-full mt-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:text-white border border-[var(--color-border)] rounded-lg hover:bg-[rgba(255,255,255,0.05)] transition-all">
-                            View All Activity
-                        </button>
-                    </div>
-
-                    {/* Quick Actions */}
-                    <div className="glass-panel p-4">
-                        <h3 className="font-bold text-[var(--color-text-primary)] mb-4 text-sm">Quick Actions</h3>
-                        <div className="space-y-2">
-                            <Link href="/search" className="block w-full py-2 px-4 bg-[var(--color-accent-primary)] text-white text-center rounded-lg hover:bg-emerald-600 transition-colors font-medium text-xs">
-                                Find Companies
-                            </Link>
-                            <button className="block w-full py-2 px-4 bg-[var(--input-bg)] text-[var(--color-text-primary)] text-center rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors border border-[var(--color-border)] text-xs">
-                                Add Portfolio Company
-                            </button>
-                            <button className="block w-full py-2 px-4 bg-[var(--input-bg)] text-[var(--color-text-primary)] text-center rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors border border-[var(--color-border)] text-xs">
-                                Create New Deal
-                            </button>
-                        </div>
-                    </div>
+                    <ActivityFeed activities={activities} isLoading={loadingActivities} />
                 </div>
             </div>
+
             {/* Bottom Spacer */}
-            <div className="h-32 w-full" aria-hidden="true" />
+            <div className="h-20 w-full" aria-hidden="true" />
         </div>
     );
 }

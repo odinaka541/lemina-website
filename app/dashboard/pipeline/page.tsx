@@ -1,17 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
+import { useToast } from '@/components/providers/ToastProvider';
 import PipelineColumn from '@/components/crm/PipelineColumn';
 import DealModal from '@/components/crm/DealModal';
+import CreateDealModal from '@/components/crm/CreateDealModal';
 import { Deal } from '@/types';
-import { ConfidenceTier } from '@/components/company/ConfidenceBadge';
 import { Plus, Filter, Search } from 'lucide-react';
-
 import { createClient } from '@/lib/supabase/client';
-import { useEffect } from 'react';
 
-// Initial structure for columns
 const INITIAL_COLUMNS = {
     'inbox': { id: 'inbox', title: 'Inbox', dealIds: [] as string[] },
     'diligence': { id: 'diligence', title: 'Due Diligence', dealIds: [] as string[] },
@@ -22,64 +21,55 @@ const INITIAL_COLUMNS = {
 
 const COLUMN_ORDER = ['inbox', 'diligence', 'negotiation', 'committed', 'passed'];
 
-export default function PipelinePage() {
+function PipelineContent() {
     const [data, setData] = useState<{
         columns: typeof INITIAL_COLUMNS,
         deals: Record<string, Deal>,
         columnOrder: string[]
     }>({
-        columns: INITIAL_COLUMNS,
+        columns: JSON.parse(JSON.stringify(INITIAL_COLUMNS)),
         deals: {},
         columnOrder: COLUMN_ORDER
     });
     const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    const supabase = createClient();
+    const searchParams = useSearchParams();
+    const { showToast } = useToast();
 
     useEffect(() => {
+        if (searchParams.get('action') === 'new') {
+            setIsCreateModalOpen(true);
+        }
         fetchDeals();
-    }, []);
+    }, [searchParams]);
 
     const fetchDeals = async () => {
         try {
-            // Fallback: Fetch companies from API if deals table not ready
-            const res = await fetch('/api/companies?limit=20');
+            const res = await fetch('/api/pipeline/deals');
             const json = await res.json();
 
             if (!json.data) throw new Error("No data");
 
             const normalizedDeals: Record<string, Deal> = {};
-            const newColumns = JSON.parse(JSON.stringify(INITIAL_COLUMNS)); // Deep copy
+            const newColumns = JSON.parse(JSON.stringify(INITIAL_COLUMNS));
 
-            json.data.forEach((company: any, index: number) => {
-                // Mock Deal Wrapper
-                const dealId = company.id.toString();
+            json.data.forEach((deal: any) => {
                 const uiDeal: Deal = {
-                    id: dealId,
-                    user_id: 'mock-user-id', // Required by type
-                    company_id: company.id.toString(), // Required by type
-                    companyName: company.name,
-                    logo: company.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=random`,
-                    website: company.website || undefined,
-                    ownerName: 'Odinaka',
-                    priority: (index % 3 === 0 ? 'High' : 'Medium') as 'High' | 'Medium',
-                    lastContact: 'Recently',
-                    industry: company.sector ? [company.sector.primary] : ['Tech'],
-                    amount: [50000, 150000, 1000000, 500000][index % 4], // Numeric now
-                    stage: COLUMN_ORDER[index % 5] as 'inbox' | 'diligence' | 'negotiation' | 'committed' | 'passed',
-                    probability: [20, 40, 60, 80, 5][index % 5],
-                    closeDate: '2025-12-01',
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
+                    ...deal,
+                    // Map joined company data flattened for UI if needed
+                    companyName: deal.company?.name || 'Unknown',
+                    logo: deal.company?.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(deal.company?.name || 'C')}&background=random`,
+                    industry: deal.company?.sector ? [deal.company.sector] : [],
+                    website: deal.company?.website
                 };
 
-                normalizedDeals[dealId] = uiDeal;
+                normalizedDeals[deal.id] = uiDeal;
 
-                // Add to assigned column
-                const stage = uiDeal.stage || 'inbox';
+                const stage = deal.stage || 'inbox';
                 if (newColumns[stage]) {
-                    newColumns[stage].dealIds.push(dealId);
+                    newColumns[stage].dealIds.push(deal.id);
                 }
             });
 
@@ -95,9 +85,23 @@ export default function PipelinePage() {
         }
     };
 
-    const updateDealStage = async (dealId: string, newStage: string) => {
-        // Mock update - in real app would call API/Supabase
-        console.log(`Moved deal ${dealId} to ${newStage}`);
+    const updateDealStage = async (dealId: string, newStage: string, index: number) => {
+        try {
+            const res = await fetch('/api/pipeline/update-stage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    dealId,
+                    newStage,
+                    newOrderIndex: index
+                })
+            });
+            if (!res.ok) throw new Error('Failed to update stage');
+        } catch (error) {
+            console.error('Failed to update deal stage:', error);
+            showToast('Failed to save changes. Please refresh.', 'error');
+            // Revert changes if needed (optimistic UI implies we might need rollback, but skipping for MVC simplicity)
+        }
     };
 
     const onDragEnd = (result: any) => {
@@ -134,6 +138,7 @@ export default function PipelinePage() {
             };
 
             setData(newState);
+            // We could also update order index on DB here if we supported reordering within column
             return;
         }
 
@@ -164,7 +169,7 @@ export default function PipelinePage() {
         setData(newState);
 
         // Update DB
-        updateDealStage(draggableId, destination.droppableId);
+        updateDealStage(draggableId, destination.droppableId, destination.index);
     };
 
     if (loading) {
@@ -174,27 +179,25 @@ export default function PipelinePage() {
     return (
         <div className="h-[calc(100vh-64px)] flex flex-col relative">
             {/* Header */}
-            <div className="p-6 border-b border-[var(--color-border)] flex justify-between items-center bg-[var(--color-bg-primary)]">
-                <div>
-                    <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Deal Pipeline</h1>
-                    <p className="text-sm text-[var(--color-text-secondary)]">Manage your deal flow and track progress.</p>
+            <div className="px-6 py-6 flex justify-end items-center gap-3">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                    <input
+                        type="text"
+                        placeholder="Search deals..."
+                        className="w-64 bg-white border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 shadow-sm transition-all"
+                    />
                 </div>
-                <div className="flex gap-3">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
-                        <input
-                            type="text"
-                            placeholder="Search deals..."
-                            className="bg-[var(--input-bg)] border border-[var(--color-border)] rounded-lg py-2 pl-9 pr-4 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-accent-primary)] outline-none"
-                        />
-                    </div>
-                    <button className="btn btn-secondary gap-2 py-2 text-sm">
-                        <Filter size={16} /> Filter
-                    </button>
-                    <button className="btn btn-primary gap-2 py-2 text-sm">
-                        <Plus size={16} /> New Deal
-                    </button>
-                </div>
+                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 text-sm font-medium rounded-xl shadow-sm hover:shadow-md transition-all">
+                    <Filter size={16} /> Filter
+                </button>
+                <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="flex items-center gap-2 px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all"
+                >
+                    <Plus size={16} />
+                    New Deal
+                </button>
             </div>
 
             {/* Kanban Board */}
@@ -208,7 +211,7 @@ export default function PipelinePage() {
                             return (
                                 <PipelineColumn
                                     key={column.id}
-                                    column={{ ...column, deals: deals as any }}
+                                    column={{ ...column, deals: (deals as any[]).filter(Boolean) }}
                                     onDealClick={(deal) => setSelectedDeal(deal)}
                                 />
                             );
@@ -217,12 +220,30 @@ export default function PipelinePage() {
                 </div>
             </DragDropContext>
 
-            {/* Deal Detail Modal (The "Pop up") */}
+            {/* Deal Detail Modal */}
             <DealModal
                 deal={selectedDeal}
                 isOpen={!!selectedDeal}
                 onClose={() => setSelectedDeal(null)}
             />
+
+            {/* Create Deal Modal */}
+            <CreateDealModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                onSuccess={() => {
+                    fetchDeals(); // Refresh list
+                    // Could also show a toast here
+                }}
+            />
         </div>
+    );
+}
+
+export default function PipelinePage() {
+    return (
+        <Suspense fallback={<div className="h-[calc(100vh-64px)] flex items-center justify-center text-[var(--color-text-secondary)]">Loading pipeline...</div>}>
+            <PipelineContent />
+        </Suspense>
     );
 }

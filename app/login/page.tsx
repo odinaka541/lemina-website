@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Loader2, ArrowRight, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
+import BrandLogo from '@/components/ui/BrandLogo'
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -69,11 +70,8 @@ export default function LoginPage() {
                 </div>
 
                 {/* Logo */}
-                <div className="relative z-10">
-                    <Link href="/" className="flex items-center gap-3 w-fit hover:opacity-80 transition-opacity">
-                        <img src="/assets/lemina.svg" alt="Lemina" className="w-10 h-10 rounded-xl" />
-                        <span className="text-2xl font-light text-white tracking-tight">Lemina</span>
-                    </Link>
+                <div className="relative z-10 w-fit">
+                    <BrandLogo />
                 </div>
 
                 {/* Main Content */}
@@ -116,10 +114,7 @@ export default function LoginPage() {
                 <div className="w-full max-w-[400px] space-y-8">
                     {/* Mobile Logo */}
                     <div className="md:hidden flex justify-center mb-8">
-                        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                            <img src="/assets/lemina.svg" alt="Lemina" className="w-10 h-10 rounded-xl" />
-                            <span className="text-2xl font-light text-white tracking-tight">Lemina</span>
-                        </Link>
+                        <BrandLogo />
                     </div>
 
                     <div className="space-y-2">

@@ -1,143 +1,54 @@
 'use client';
 
-import { useState } from 'react';
-import { Calendar, Download, TrendingUp, DollarSign, Activity, Globe } from 'lucide-react';
-import TrendChart from '@/components/market/TrendChart';
+import React from 'react';
+import Link from 'next/link';
+import { Construction, ArrowLeft, Globe } from 'lucide-react';
 
-// Mock Data
-const FUNDING_TREND = [
-    { month: 'Jan', amount: 120 },
-    { month: 'Feb', amount: 150 },
-    { month: 'Mar', amount: 180 },
-    { month: 'Apr', amount: 140 },
-    { month: 'May', amount: 210 },
-    { month: 'Jun', amount: 250 },
-];
-
-const REGIONAL_SPLIT = [
-    { region: 'West Africa', share: 45 },
-    { region: 'East Africa', share: 25 },
-    { region: 'North Africa', share: 20 },
-    { region: 'Southern Africa', share: 10 },
-];
-
-const REPORTS = [
-    { id: 1, title: 'Q3 2025 African Tech Funding Report', date: 'Oct 15, 2025', size: '4.2 MB' },
-    { id: 2, title: 'Fintech Landscape: Nigeria vs Egypt', date: 'Sep 28, 2025', size: '2.8 MB' },
-    { id: 3, title: 'Emerging Sectors: Healthtech & Logistics', date: 'Sep 10, 2025', size: '3.5 MB' },
-];
-
-export default function MarketPage() {
-    const [dateRange, setDateRange] = useState('Last 6 Months');
-
+export default function MarketIntelPage() {
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-end mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">Market Intelligence</h1>
-                    <p className="text-[var(--color-text-secondary)]">Macro-level insights into the African tech ecosystem.</p>
-                </div>
-                <div className="flex gap-3">
-                    <button className="btn btn-secondary gap-2">
-                        <Calendar size={16} /> {dateRange}
-                    </button>
-                    <button className="btn btn-primary gap-2">
-                        <Download size={16} /> Export Data
-                    </button>
-                </div>
+        <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[60vh] text-center">
+
+            <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mb-6 border border-amber-100 shadow-sm animate-pulse">
+                <Construction size={40} className="text-amber-500" />
             </div>
 
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className="glass-panel p-5">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-[rgba(16,185,129,0.1)] rounded-lg text-[var(--color-accent-primary)]">
-                            <DollarSign size={20} />
-                        </div>
-                        <span className="text-sm text-[var(--color-text-secondary)]">Capital Deployed</span>
-                    </div>
-                    <h3 className="text-3xl font-bold text-[var(--color-text-primary)]">$1.2B</h3>
-                    <p className="text-xs text-emerald-500 mt-1 flex items-center">
-                        <TrendingUp size={12} className="mr-1" /> +15% vs last period
-                    </p>
-                </div>
-                <div className="glass-panel p-5">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-[rgba(59,130,246,0.1)] rounded-lg text-blue-500">
-                            <Activity size={20} />
-                        </div>
-                        <span className="text-sm text-[var(--color-text-secondary)]">Deal Count</span>
-                    </div>
-                    <h3 className="text-3xl font-bold text-[var(--color-text-primary)]">342</h3>
-                    <p className="text-xs text-emerald-500 mt-1 flex items-center">
-                        <TrendingUp size={12} className="mr-1" /> +8% vs last period
-                    </p>
-                </div>
-                <div className="glass-panel p-5">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-[rgba(245,158,11,0.1)] rounded-lg text-amber-500">
-                            <Globe size={20} />
-                        </div>
-                        <span className="text-sm text-[var(--color-text-secondary)]">Active Regions</span>
-                    </div>
-                    <h3 className="text-3xl font-bold text-[var(--color-text-primary)]">12</h3>
-                    <p className="text-xs text-[var(--color-text-secondary)] mt-1">
-                        Top: Nigeria, Kenya, Egypt
-                    </p>
-                </div>
-            </div>
+            <h1 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">
+                MARKET INTELLIGENCE
+            </h1>
 
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <div className="glass-panel p-6">
-                    <h3 className="font-bold text-[var(--color-text-primary)] mb-4">Funding Trend (Capital Deployed)</h3>
-                    <TrendChart
-                        type="line"
-                        data={FUNDING_TREND}
-                        dataKey="amount"
-                        xAxisKey="month"
-                        color="var(--color-accent-primary)"
-                        name="Capital ($M)"
-                    />
-                </div>
-                <div className="glass-panel p-6">
-                    <h3 className="font-bold text-[var(--color-text-primary)] mb-4">Regional Deal Share</h3>
-                    <TrendChart
-                        type="bar"
-                        data={REGIONAL_SPLIT}
-                        dataKey="share"
-                        xAxisKey="region"
-                        color="#3b82f6"
-                        name="Share (%)"
-                    />
-                </div>
-            </div>
+            <span className="inline-block px-4 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-full mb-8">
+                LAUNCHING Q2 2026
+            </span>
 
-            {/* Recent Reports */}
-            <div className="glass-panel">
-                <div className="p-6 border-b border-[var(--color-border)] flex justify-between items-center">
-                    <h3 className="font-bold text-[var(--color-text-primary)]">Recent Market Reports</h3>
-                    <button className="text-sm text-[var(--color-accent-primary)] hover:text-emerald-400">View All</button>
-                </div>
-                <div className="divide-y divide-[var(--color-border)]">
-                    {REPORTS.map((report) => (
-                        <div key={report.id} className="p-4 flex items-center justify-between hover:bg-[rgba(255,255,255,0.02)] transition-colors">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-[rgba(255,255,255,0.05)] flex items-center justify-center text-[var(--color-text-secondary)]">
-                                    <Activity size={20} />
-                                </div>
-                                <div>
-                                    <h4 className="font-medium text-[var(--color-text-primary)]">{report.title}</h4>
-                                    <p className="text-xs text-[var(--color-text-secondary)]">{report.date} • {report.size}</p>
-                                </div>
-                            </div>
-                            <button className="p-2 text-[var(--color-text-secondary)] hover:text-white hover:bg-[rgba(255,255,255,0.05)] rounded-lg transition-colors">
-                                <Download size={18} />
-                            </button>
-                        </div>
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-lg w-full shadow-sm mb-8 text-left">
+                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <Globe size={18} className="text-indigo-500" />
+                    Ecosystem Insights
+                </h3>
+                <ul className="space-y-3 mb-6">
+                    {['Deal flow trends across 15+ countries', 'Sector performance benchmarks', 'Regional capital deployment', 'Valuation multiples by stage'].map((item, i) => (
+                        <li key={i} className="flex items-start gap-3 text-sm text-slate-600">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5" />
+                            {item}
+                        </li>
                     ))}
+                </ul>
+
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                    <p className="text-xs text-slate-500 mb-2">Data Requirement: <span className="font-semibold text-slate-700">500+ Companies</span></p>
+                    <div className="w-full bg-slate-100 rounded-full h-2 mb-2 overflow-hidden">
+                        <div className="bg-amber-500 h-2 rounded-full w-[16%]" />
+                    </div>
+                    <p className="text-xs font-medium text-slate-600 text-right">We're at 81 companies—getting there!</p>
                 </div>
             </div>
+
+            <Link
+                href="/dashboard"
+                className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+            >
+                <ArrowLeft size={16} /> Back to Dashboard
+            </Link>
         </div>
     );
 }

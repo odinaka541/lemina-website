@@ -17,13 +17,13 @@ const navItems = [
     { name: 'Companies', href: '/dashboard', icon: LayoutGrid },
     { name: 'My Pipeline', href: '/dashboard/pipeline', icon: Target },
     { name: 'Portfolio', href: '/dashboard/portfolio', icon: LineChart },
-    { name: 'Market Intel', href: '/dashboard/market', icon: Globe },
+    // { name: 'Market Intel', href: '/dashboard/market', icon: Globe },
     { name: 'Alerts', href: '/dashboard/alerts', icon: Bell },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 const networkItems = [
-    { name: 'My Syndicate', href: '/dashboard/syndicate', icon: Users },
+    { name: 'My Network', href: '/dashboard/syndicate', icon: Users },
     { name: 'Deal Flow', href: '/dashboard/syndicate/deals', icon: Target },
 ];
 

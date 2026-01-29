@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { WelcomeStep, ThesisStep, AlertStep, TourStep } from '@/components/onboarding/steps'
 import { createClient } from '@/lib/supabase/client'
+import BrandLogo from '@/components/ui/BrandLogo'
 
 export default function OnboardingPage() {
     const [step, setStep] = useState(1)
@@ -42,12 +43,7 @@ export default function OnboardingPage() {
 
             {/* Header */}
             <header className="p-6 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-xl">L</span>
-                    </div>
-                    <span className="text-xl font-bold text-white tracking-tight">Lemina</span>
-                </div>
+                <BrandLogo textSize="text-xl" />
                 <div className="text-sm text-gray-500">
                     Step {step} of 4
                 </div>

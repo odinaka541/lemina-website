@@ -55,7 +55,10 @@ export function mapCompanyToList(apiCompany: any): CompanyCardProps {
         funding: apiCompany.key_metrics?.funding_stage || apiCompany.financials?.funding_stage?.value || 'Unknown',
         lastUpdated: formatTimeAgo(apiCompany.last_verified_at || new Date().toISOString()),
         flags: apiCompany.headquarters?.country_code ? [apiCompany.headquarters.country_code.toLowerCase()] : [],
-        metrics: metrics
+        metrics: metrics,
+        // Defaulting these for now until API returns them
+        matchScore: undefined,
+        isVerified: apiCompany.verification_status === 'verified'
     };
 }
 

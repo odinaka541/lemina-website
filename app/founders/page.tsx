@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import BrandLogo from '@/components/ui/BrandLogo';
 
 interface FormData {
   companyName: string;
@@ -118,10 +119,9 @@ export default function FoundersPage() {
       <div className="container" style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', textDecoration: 'none', marginBottom: '40px' }}>
-            <img src="/assets/lemina.svg" alt="Lemina" style={{ width: '40px', height: '40px', borderRadius: '10px' }} />
-            <span className="logo-text" style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>Lemina</span>
-          </Link>
+          <div style={{ display: 'inline-flex', marginBottom: '40px' }}>
+            <BrandLogo />
+          </div>
 
           <h1 className="text-gradient" style={{ fontSize: '3.5rem', marginBottom: '20px' }}>Add Your Company</h1>
           <h2 style={{ fontSize: '1.5rem', color: 'var(--color-accent-primary)', fontWeight: 500, marginBottom: '16px' }}>

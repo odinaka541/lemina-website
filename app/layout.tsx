@@ -26,6 +26,8 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+import { ToastProvider } from '@/components/providers/ToastProvider';
+
 export default function RootLayout({
   children,
 }: {
@@ -37,9 +39,10 @@ export default function RootLayout({
         <link rel="icon" href="/assets/favicon.ico" />
       </head>
       <body className="font-sans antialiased">
-        <div className="gradient-bg"></div>
-        <div className="grid-overlay"></div>
-        {children}
+        <ToastProvider>
+          <div className="gradient-bg"></div>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   )

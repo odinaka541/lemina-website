@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/dashboard/Sidebar';
 import { Menu, Search, X } from 'lucide-react';
-import NotificationCenter from '@/components/notifications/NotificationCenter'; // Added import
+import NotificationCenter from '@/components/notifications/NotificationCenter';
+import BrandLogo from '@/components/ui/BrandLogo';
 
 export default function DashboardLayout({
     children,
@@ -20,6 +21,7 @@ export default function DashboardLayout({
 
     return (
         <div className="min-h-screen text-[var(--color-text-primary)] font-sans">
+
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
             {/* Mobile Header */}
@@ -31,7 +33,7 @@ export default function DashboardLayout({
                     >
                         <Menu size={24} />
                     </button>
-                    <span className="font-bold text-lg tracking-tight text-white">Lemina</span>
+                    <BrandLogo iconSize="w-6 h-6" textSize="text-lg" />
                 </div>
                 <div className="flex items-center gap-4"> {/* Added wrapper div for actions */}
                     <NotificationCenter /> {/* Added NotificationCenter */}
@@ -46,25 +48,42 @@ export default function DashboardLayout({
                 {/* Desktop Header */}
                 <header className="hidden lg:flex h-16 border-b border-[var(--color-border)] items-center justify-between px-8 sticky top-0 bg-[#030712]/80 backdrop-blur-md z-40">
                     <div className="flex-1 max-w-xl">
-                        <div className="relative group">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Search className="h-4 w-4 text-[var(--color-text-secondary)] group-focus-within:text-[var(--color-accent-primary)] transition-colors" />
+                        <div className="flex items-center">
+                            {/* Search Icon Box */}
+                            <button
+                                onClick={() => {
+                                    if (searchQuery.trim()) {
+                                        window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+                                    }
+                                }}
+                                className="h-10 w-12 flex items-center justify-center bg-white/5 border border-white/10 border-r-0 rounded-l-xl hover:bg-white/10 transition-colors group"
+                            >
+                                <Search className="h-4 w-4 text-slate-400 group-hover:text-emerald-400 transition-colors" />
+                            </button>
+
+                            {/* Input Box */}
+                            <div className="relative flex-1">
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+                                        }
+                                    }}
+                                    className="block w-full h-10 pl-3 pr-10 border border-white/10 border-l-white/5 rounded-r-xl leading-5 bg-white/5 text-white placeholder-slate-400 focus:outline-none focus:bg-white/10 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 sm:text-sm transition-all shadow-sm backdrop-blur-sm"
+                                    placeholder="Search companies or deals..."
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white transition-colors"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
                             </div>
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="block w-full pl-11 pr-10 py-2 border border-[var(--color-border)] rounded-lg leading-5 bg-[rgba(255,255,255,0.03)] text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-[rgba(255,255,255,0.05)] focus:border-[var(--color-accent-primary)] focus:ring-1 focus:ring-[var(--color-accent-primary)] sm:text-sm transition-all"
-                                placeholder="Search companies, deals, or people..."
-                            />
-                            {searchQuery && (
-                                <button
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white transition-colors"
-                                >
-                                    <X size={14} />
-                                </button>
-                            )}
                         </div>
                     </div>
                     <div className="flex items-center gap-6 ml-4">

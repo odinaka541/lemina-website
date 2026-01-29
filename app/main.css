@@ -47,25 +47,26 @@
 }
 
 [data-theme='light'] {
-    --color-bg-primary: #f8fafc;
+    --color-bg-primary: #ffffff;
+    /* Pure White */
+    --color-bg-secondary: #f8fafc;
     /* Slate 50 */
-    --color-bg-secondary: #ffffff;
-    /* White */
     --color-text-primary: #0f172a;
     /* Slate 900 */
     --color-text-secondary: #64748b;
     /* Slate 500 */
-    --color-border: rgba(0, 0, 0, 0.1);
+    --color-border: rgba(0, 0, 0, 0.05);
 
     /* Semantic Variables - Light Mode */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border-color: rgba(0, 0, 0, 0.1);
-    --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-    --input-bg: rgba(0, 0, 0, 0.05);
-    --card-bg: rgba(255, 255, 255, 0.5);
-    --nav-bg: rgba(255, 255, 255, 0.8);
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    /* More opaque white */
+    --glass-border-color: rgba(0, 0, 0, 0.06);
+    --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    --input-bg: rgba(0, 0, 0, 0.03);
+    --card-bg: #ffffff;
+    --nav-bg: rgba(255, 255, 255, 0.9);
     --text-gradient-start: #0f172a;
-    --text-gradient-end: #64748b;
+    --text-gradient-end: #475569;
 
     --glass-border: 1px solid var(--glass-border-color);
 }
@@ -130,9 +131,33 @@ body {
     width: 100vw;
     height: 100vh;
     z-index: -2;
+    /* Default Dark Mode */
     background:
         radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.08), transparent 25%),
         radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.08), transparent 25%);
+}
+
+/* Light Mode Overrides for Background */
+[data-theme='light'] .gradient-bg {
+    background:
+        radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.03), transparent 30%),
+        radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.03), transparent 30%);
+}
+
+[data-theme='light'] .gradient-bg::before {
+    opacity: 0.3;
+    /* More subtle aurora */
+    background: radial-gradient(circle, rgba(234, 179, 8, 0.08), transparent 70%);
+}
+
+[data-theme='light'] .gradient-bg::after {
+    /* Subtle Golden Glow */
+    background: radial-gradient(circle,
+            rgba(250, 204, 21, 0.15) 0%,
+            /* Reduced opacity */
+            rgba(16, 185, 129, 0.05) 40%,
+            transparent 70%);
+    opacity: 0.6;
 }
 
 /* Animated Aurora */
@@ -203,6 +228,24 @@ body {
         opacity: 0.95;
     }
 
+    75% {
+        transform: translate(-50%, -50%) scale(1.02);
+        opacity: 0.95;
+    }
+
+}
+
+/* Global Grid Overlay */
+.grid-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    background-image: radial-gradient(rgba(226, 232, 240, 0.8) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
 }
 
 /* Form Elements */

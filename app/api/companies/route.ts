@@ -35,6 +35,12 @@ export async function GET(request: Request) {
       query = query.eq('sector', sector)
     }
 
+    // filter by search query (name or description)
+    const searchQuery = searchParams.get('q') || searchParams.get('search')
+    if (searchQuery) {
+      query = query.or(`name.ilike.%${searchQuery}%,short_description.ilike.%${searchQuery}%`)
+    }
+
     const { data: companies, error, count } = await query
 
     if (error) throw error

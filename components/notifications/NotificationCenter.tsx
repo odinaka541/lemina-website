@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Bell, Check, X } from 'lucide-react';
+import Link from 'next/link';
 
 // Mock Data
 const MOCK_NOTIFICATIONS = [
@@ -75,13 +76,13 @@ export default function NotificationCenter() {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl shadow-2xl z-50 animate-fade-in overflow-hidden">
-                    <div className="p-4 border-b border-[var(--color-border)] flex justify-between items-center bg-[rgba(255,255,255,0.02)]">
-                        <h3 className="font-bold text-white">Notifications</h3>
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 animate-fade-in overflow-hidden">
+                    <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <h3 className="font-bold text-slate-900">Notifications</h3>
                         {unreadCount > 0 && (
                             <button
                                 onClick={markAllAsRead}
-                                className="text-xs text-[var(--color-accent-primary)] hover:text-emerald-400 font-medium"
+                                className="text-xs text-[var(--color-accent-primary)] hover:text-emerald-700 font-medium"
                             >
                                 Mark all read
                             </button>
@@ -89,7 +90,7 @@ export default function NotificationCenter() {
                     </div>
                     <div className="max-h-[400px] overflow-y-auto">
                         {notifications.length === 0 ? (
-                            <div className="p-8 text-center text-[var(--color-text-secondary)]">
+                            <div className="p-8 text-center text-slate-500">
                                 <Bell size={24} className="mx-auto mb-2 opacity-50" />
                                 <p className="text-sm">No notifications</p>
                             </div>
@@ -97,15 +98,15 @@ export default function NotificationCenter() {
                             notifications.map(notification => (
                                 <div
                                     key={notification.id}
-                                    className={`p-4 border-b border-[var(--color-border)] last:border-0 hover:bg-[rgba(255,255,255,0.02)] transition-colors group relative ${!notification.read ? 'bg-[rgba(16,185,129,0.05)]' : ''}`}
+                                    className={`p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors group relative ${!notification.read ? 'bg-emerald-50/50' : ''}`}
                                 >
                                     <div className="flex justify-between items-start mb-1">
-                                        <h4 className={`text-sm font-medium ${!notification.read ? 'text-white' : 'text-gray-300'}`}>
+                                        <h4 className={`text-sm font-bold ${!notification.read ? 'text-slate-900' : 'text-slate-600'}`}>
                                             {notification.title}
                                         </h4>
-                                        <span className="text-xs text-[var(--color-text-secondary)]">{notification.time}</span>
+                                        <span className="text-xs text-slate-400 font-medium">{notification.time}</span>
                                     </div>
-                                    <p className="text-xs text-[var(--color-text-secondary)] pr-6">
+                                    <p className="text-xs text-slate-600 font-medium pr-6 leading-relaxed">
                                         {notification.message}
                                     </p>
 
@@ -113,7 +114,7 @@ export default function NotificationCenter() {
                                         {!notification.read && (
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }}
-                                                className="p-1 text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)] rounded"
+                                                className="p-1 text-slate-400 hover:text-[var(--color-accent-primary)] rounded"
                                                 title="Mark as read"
                                             >
                                                 <Check size={14} />
@@ -121,7 +122,7 @@ export default function NotificationCenter() {
                                         )}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); removeNotification(notification.id); }}
-                                            className="p-1 text-[var(--color-text-secondary)] hover:text-red-400 rounded"
+                                            className="p-1 text-slate-400 hover:text-red-500 rounded"
                                             title="Remove"
                                         >
                                             <X size={14} />
@@ -131,10 +132,10 @@ export default function NotificationCenter() {
                             ))
                         )}
                     </div>
-                    <div className="p-2 border-t border-[var(--color-border)] bg-[rgba(255,255,255,0.02)]">
-                        <button className="w-full py-2 text-xs text-[var(--color-text-secondary)] hover:text-white transition-colors">
+                    <div className="p-2 border-t border-slate-100 bg-slate-50/50">
+                        <Link href="/dashboard/alerts" className="block w-full text-center py-2 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors">
                             View All Notifications
-                        </button>
+                        </Link>
                     </div>
                 </div>
             )}

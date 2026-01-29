@@ -75,30 +75,47 @@ function SearchPageContent() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--color-bg-primary)]">
+    return (
+        <div className="min-h-screen bg-slate-50 overflow-hidden relative" data-theme="light">
+            <div className="gradient-bg opacity-50" />
             <Navbar />
 
             <main className="container mx-auto px-4 py-8">
                 {/* Search Header */}
+                {/* Search Header */}
                 <div className="max-w-4xl mx-auto mb-10 text-center">
-                    <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-4">
+                    <h1 className="text-3xl font-bold text-slate-900 mb-4">
                         Find Verified African Companies
                     </h1>
 
-                    {/* Search Bar */}
-                    <div className="relative max-w-2xl mx-auto">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={20} />
-                        <input
-                            type="text"
-                            placeholder="Search by name, sector, or investors..."
-                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-[var(--input-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] transition-colors placeholder:text-[var(--color-text-secondary)]/50"
-                            defaultValue={searchQuery}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    updateFilter('q', e.currentTarget.value);
+                    {/* Search Bar - Two Box Design */}
+                    <div className="max-w-2xl mx-auto flex items-center">
+                        {/* Search Icon Box */}
+                        <button
+                            onClick={() => {
+                                if (searchQuery.trim()) {
+                                    updateFilter('q', searchQuery);
                                 }
                             }}
-                        />
+                            className="h-12 w-14 flex items-center justify-center bg-white border border-slate-200 border-r-slate-100 rounded-l-xl hover:bg-slate-50 transition-colors group"
+                        >
+                            <Search className="h-5 w-5 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                        </button>
+
+                        {/* Input Box */}
+                        <div className="relative flex-1">
+                            <input
+                                type="text"
+                                placeholder="Search by name, sector, or investors..."
+                                className="w-full h-12 pl-4 pr-4 rounded-r-xl bg-white border border-slate-200 border-l-0 text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors placeholder:text-slate-400"
+                                defaultValue={searchQuery}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        updateFilter('q', e.currentTarget.value);
+                                    }
+                                }}
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -118,8 +135,8 @@ function SearchPageContent() {
                                         key={sector}
                                         onClick={() => updateFilter('sector', sector)}
                                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${activeSector === sector
-                                                ? 'bg-[var(--color-accent-primary)] text-white font-medium'
-                                                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
+                                            ? 'bg-[var(--color-accent-primary)] text-white font-medium'
+                                            : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
                                             }`}
                                     >
                                         {sector}
@@ -138,8 +155,8 @@ function SearchPageContent() {
                                 {['All', 'Verified', 'Self-Reported'].map(status => (
                                     <label key={status} className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] cursor-pointer group">
                                         <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${activeVerification === status
-                                                ? 'bg-[var(--color-accent-primary)] border-[var(--color-accent-primary)]'
-                                                : 'border-[var(--color-border)] group-hover:border-[var(--color-text-secondary)]'
+                                            ? 'bg-[var(--color-accent-primary)] border-[var(--color-accent-primary)]'
+                                            : 'border-[var(--color-border)] group-hover:border-[var(--color-text-secondary)]'
                                             }`}>
                                             {activeVerification === status && <CheckCircle2 size={10} className="text-white" />}
                                         </div>
