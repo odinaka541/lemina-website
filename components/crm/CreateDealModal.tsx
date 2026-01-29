@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     X, Search, DollarSign, Users, Calendar,
     Upload, FileText, AlertCircle, Plus,
-    Loader2, UserCheck, Layout, ChevronDown
+    Loader2, UserCheck, Layout, ChevronDown, PieChart
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 
@@ -44,6 +44,7 @@ interface DealFormData {
     is_syndicate: boolean;
     syndicate_lead?: string;
     probability?: number;
+    priority: 'High' | 'Medium' | 'Low';
 }
 
 // Mock contacts for demo
@@ -72,7 +73,8 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess }: CreateDe
             investment_amount: '',
             deal_source: '',
             is_syndicate: false,
-            probability: 50,
+            round_size: '',
+            priority: 'Medium',
             expected_close_date: defaultCloseDate
         };
     });
@@ -115,10 +117,6 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess }: CreateDe
 
         if (!formData.investment_amount || Number(formData.investment_amount) <= 0) {
             newErrors.investment_amount = 'Investment amount must be greater than $0';
-        }
-
-        if (!formData.deal_source) {
-            newErrors.deal_source = 'Please select a source';
         }
 
         setErrors(newErrors);
@@ -177,10 +175,15 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess }: CreateDe
                     companyId: companyId, // Note: API expects companyId (camelCase) based on previous code
                     stage: 'inbox',
                     amount: Number(formData.investment_amount),
-                    probability: formData.probability,
-                    // Additional fields might need DB migration or JSON storage if not present in schema
-                    // For now sending core fields + putting others in notes if schema is rigid
-                    notes: `${formData.initial_notes || ''}\n\n[Meta]\nSource: ${formData.deal_source}\nIntroduced By: ${formData.introduced_by}\nRound Size: ${formData.round_size}\nSyndicate: ${formData.is_syndicate ? 'Yes' : 'No'}`,
+                    // probability removed from UI, defaulting API side
+                    round_size: formData.round_size ? Number(formData.round_size) : Number(formData.investment_amount),
+                    notes: formData.initial_notes, // Direct mapping to new notes column
+                    deal_source: formData.deal_source,
+                    expected_close_date: formData.expected_close_date,
+                    is_syndicate: formData.is_syndicate,
+                    syndicate_lead: formData.syndicate_lead,
+                    introduced_by: formData.introduced_by,
+                    priority: formData.priority
                 })
             });
 
@@ -249,16 +252,16 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess }: CreateDe
                 className="fixed inset-0 bg-[#030712]/60 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto"
                 onClick={onClose}
             >
-                <div className="min-h-full py-10 flex items-center justify-center w-full">
+                <div className="flex items-center justify-center w-full h-full p-4">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full max-w-[600px] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden relative"
+                        className="w-full max-w-[600px] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden relative max-h-[90vh]"
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white sticky top-0 z-10">
+                        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-white sticky top-0 z-10 shrink-0">
                             <h2 className="text-xl font-bold text-slate-900">Add New Deal</h2>
                             <button
                                 onClick={onClose}
@@ -269,20 +272,20 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess }: CreateDe
                         </div>
 
                         {/* Form */}
-                        <form onSubmit={handleSubmit} className="p-6 space-y-6 bg-white overflow-y-auto max-h-[80vh]">
+                        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-5 bg-white overflow-y-auto custom-scrollbar">
 
                             {/* TASK 1.1: Company Selector */}
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-700">Target Company <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-semibold text-slate-700">Target Company <span className="text-red-500">*</span></label>
 
                                 {!isNewCompany ? (
                                     <div className="flex items-stretch shadow-sm group">
-                                        <div className="w-12 flex items-center justify-center bg-slate-50 border border-slate-200 border-r-0 rounded-l-xl text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-500 transition-colors">
-                                            <Search size={18} />
+                                        <div className="w-11 flex items-center justify-center bg-slate-50 border border-slate-200 border-r-0 rounded-l-lg text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-500 transition-colors">
+                                            <Search size={20} />
                                         </div>
                                         <div className="relative flex-1">
                                             <select
-                                                className="w-full h-full appearance-none bg-slate-50 border border-slate-200 rounded-r-xl rounded-l-none pl-4 pr-10 py-3 text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 cursor-pointer hover:bg-white"
+                                                className="w-full h-11 appearance-none bg-slate-50 border border-slate-200 rounded-r-lg rounded-l-none pl-3 pr-8 text-sm text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 cursor-pointer hover:bg-white"
                                                 value={formData.company_id || ''}
                                                 onChange={(e) => {
                                                     if (e.target.value === 'create_new') {
@@ -306,67 +309,60 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess }: CreateDe
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="p-5 bg-slate-50 rounded-xl space-y-4 border border-slate-200">
-                                        <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-2">
-                                            <span className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                                                <Plus size={14} className="text-emerald-500" /> New Company
+                                    <div className="p-5 bg-slate-50 rounded-lg space-y-4 border border-slate-200">
+                                        <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-1">
+                                            <span className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                                                <Plus size={16} className="text-emerald-500" /> New Company
                                             </span>
                                             <button
                                                 type="button"
                                                 onClick={() => setIsNewCompany(false)}
-                                                className="text-xs text-slate-500 hover:text-slate-800 underline"
+                                                className="text-xs uppercase font-bold text-slate-400 hover:text-slate-700 hover:underline"
                                             >
                                                 Cancel
                                             </button>
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-semibold text-slate-500 mb-1">Company Name *</label>
                                             <input
                                                 type="text"
-                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
-                                                placeholder="e.g. Acme Corp"
+                                                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-emerald-500 outline-none"
+                                                placeholder="Company Name *"
                                                 value={formData.new_company_name || ''}
                                                 onChange={e => setFormData({ ...formData, new_company_name: e.target.value })}
                                             />
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-slate-500 mb-1">Country *</label>
-                                                <select
-                                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-emerald-500 outline-none"
-                                                    value={formData.new_company_country || ''}
-                                                    onChange={e => setFormData({ ...formData, new_company_country: e.target.value })}
-                                                >
-                                                    <option value="">Select...</option>
-                                                    <option value="Nigeria">Nigeria</option>
-                                                    <option value="Kenya">Kenya</option>
-                                                    <option value="South Africa">South Africa</option>
-                                                    <option value="Egypt">Egypt</option>
-                                                    <option value="Ghana">Ghana</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-slate-500 mb-1">Sector *</label>
-                                                <select
-                                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-emerald-500 outline-none"
-                                                    value={formData.new_company_sector || ''}
-                                                    onChange={e => setFormData({ ...formData, new_company_sector: e.target.value })}
-                                                >
-                                                    <option value="">Select...</option>
-                                                    <option value="Fintech">Fintech</option>
-                                                    <option value="Healthtech">Healthtech</option>
-                                                    <option value="Logistics">Logistics</option>
-                                                    <option value="AgriTech">AgriTech</option>
-                                                    <option value="Cleantech">Cleantech</option>
-                                                    <option value="Other">Other</option>
-                                                </select>
-                                            </div>
+                                            <select
+                                                className="w-full px-2 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-emerald-500 outline-none"
+                                                value={formData.new_company_country || ''}
+                                                onChange={e => setFormData({ ...formData, new_company_country: e.target.value })}
+                                            >
+                                                <option value="">Country *</option>
+                                                <option value="Nigeria">Nigeria</option>
+                                                <option value="Kenya">Kenya</option>
+                                                <option value="South Africa">South Africa</option>
+                                                <option value="Egypt">Egypt</option>
+                                                <option value="Ghana">Ghana</option>
+                                            </select>
+                                            <select
+                                                className="w-full px-2 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-emerald-500 outline-none"
+                                                value={formData.new_company_sector || ''}
+                                                onChange={e => setFormData({ ...formData, new_company_sector: e.target.value })}
+                                            >
+                                                <option value="">Sector *</option>
+                                                <option value="Fintech">Fintech</option>
+                                                <option value="Healthtech">Healthtech</option>
+                                                <option value="Logistics">Logistics</option>
+                                                <option value="AgriTech">AgriTech</option>
+                                                <option value="Cleantech">Cleantech</option>
+                                                <option value="Other">Other</option>
+                                            </select>
                                         </div>
                                         <input
                                             type="url"
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-emerald-500 outline-none"
+                                            className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-emerald-500 outline-none"
                                             placeholder="Website URL (Optional)"
                                             value={formData.new_company_website || ''}
                                             onChange={e => setFormData({ ...formData, new_company_website: e.target.value })}
@@ -378,123 +374,90 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess }: CreateDe
                                 )}
                             </div>
 
-                            {/* TASK 1.2: Investment Fields */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-slate-700">Your Investment <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-semibold text-slate-700">Your Investment <span className="text-red-500">*</span></label>
                                     <div className="flex items-stretch shadow-sm group">
-                                        <div className="w-10 flex items-center justify-center bg-slate-50 border border-slate-200 border-r-0 rounded-l-xl text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-500 transition-colors">
-                                            <DollarSign size={16} />
+                                        <div className="w-11 flex items-center justify-center bg-slate-50 border border-slate-200 border-r-0 rounded-l-lg text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-500 transition-colors">
+                                            <DollarSign size={18} />
                                         </div>
                                         <input
                                             type="number"
-                                            className="flex-1 w-full bg-slate-50 border border-slate-200 rounded-r-xl rounded-l-none pl-3 pr-3 py-3 text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 hover:bg-white"
+                                            min="0"
+                                            step="100"
+                                            className="flex-1 w-full h-11 bg-slate-50 border border-slate-200 rounded-r-lg rounded-l-none pl-3 pr-3 text-sm text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 hover:bg-white"
                                             placeholder="50,000"
                                             value={formData.investment_amount}
                                             onChange={(e) => setFormData(prev => ({ ...prev, investment_amount: parseFloat(e.target.value) || '' }))}
                                         />
                                     </div>
-                                    <p className="text-[10px] text-slate-500">Amount you plan to invest</p>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-slate-700">Round Size</label>
+                                    <label className="block text-sm font-semibold text-slate-700">Round Size <span className="text-slate-400 font-normal text-xs ml-1">(Total Raise)</span></label>
                                     <div className="flex items-stretch shadow-sm group">
-                                        <div className="w-10 flex items-center justify-center bg-slate-50 border border-slate-200 border-r-0 rounded-l-xl text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-500 transition-colors">
-                                            <DollarSign size={16} />
+                                        <div className="w-11 flex items-center justify-center bg-slate-50 border border-slate-200 border-r-0 rounded-l-lg text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-500 transition-colors">
+                                            <PieChart size={18} />
                                         </div>
                                         <input
                                             type="number"
-                                            className="flex-1 w-full bg-slate-50 border border-slate-200 rounded-r-xl rounded-l-none pl-3 pr-3 py-3 text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 hover:bg-white"
-                                            placeholder="2M"
-                                            value={formData.round_size}
+                                            min="0"
+                                            step="100"
+                                            className="flex-1 w-full h-11 bg-slate-50 border border-slate-200 rounded-r-lg rounded-l-none pl-3 pr-3 text-sm text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 hover:bg-white"
+                                            placeholder="2,000,000"
+                                            value={formData.round_size || ''}
                                             onChange={(e) => setFormData(prev => ({ ...prev, round_size: parseFloat(e.target.value) || '' }))}
                                         />
                                     </div>
-                                    <p className="text-[10px] text-slate-500">Total round target</p>
                                 </div>
                             </div>
-
-                            {/* TASK 1.3: Deal Source */}
+                            {/* NEW: Priority Selector */}
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-700">How did you find this deal? <span className="text-red-500">*</span></label>
-                                <div className="flex items-stretch shadow-sm group">
-                                    <div className="w-12 flex items-center justify-center bg-slate-50 border border-slate-200 border-r-0 rounded-l-xl text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-500 transition-colors">
-                                        <Users size={18} />
-                                    </div>
-                                    <div className="relative flex-1">
-                                        <select
-                                            className="w-full h-full appearance-none bg-slate-50 border border-slate-200 rounded-r-xl rounded-l-none pl-4 pr-10 py-3 text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all cursor-pointer hover:bg-white"
-                                            value={formData.deal_source}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, deal_source: e.target.value as any }))}
+                                <label className="block text-sm font-semibold text-slate-700">Priority</label>
+                                <div className="flex gap-2">
+                                    {['High', 'Medium', 'Low'].map((p) => (
+                                        <button
+                                            key={p}
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, priority: p as any }))}
+                                            className={`flex-1 h-10 text-sm font-medium rounded-lg border transition-all flex items-center justify-center gap-2
+                                                ${formData.priority === p
+                                                    ? (p === 'High' ? 'bg-red-50 border-red-200 text-red-700 ring-1 ring-red-500' :
+                                                        p === 'Medium' ? 'bg-amber-50 border-amber-200 text-amber-700 ring-1 ring-amber-500' :
+                                                            'bg-slate-50 border-slate-200 text-slate-700 ring-1 ring-slate-500')
+                                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                                                }`}
                                         >
-                                            <option value="">Select source...</option>
-                                            <option value="warm_intro">🤝 Warm introduction</option>
-                                            <option value="cold_outreach">📧 Cold outreach</option>
-                                            <option value="conference">🎤 Conference</option>
-                                            <option value="network_referral">👥 Network referral</option>
-                                            <option value="other">📌 Other</option>
-                                        </select>
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                            <ChevronDown size={14} />
-                                        </div>
-                                    </div>
+                                            <div className={`w-2 h-2 rounded-full ${p === 'High' ? 'bg-red-500' : p === 'Medium' ? 'bg-amber-500' : 'bg-slate-400'
+                                                }`} />
+                                            {p}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
-
-                            {/* TASK 2: Enhanced Fields */}
-                            {(formData.deal_source === 'warm_intro' || formData.deal_source === 'network_referral') && (
-                                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <label className="block text-sm font-medium text-slate-700">Introduced by</label>
-                                    <div className="flex items-stretch shadow-sm group">
-                                        <div className="w-12 flex items-center justify-center bg-slate-50 border border-slate-200 border-r-0 rounded-l-xl text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-500 transition-colors">
-                                            <UserCheck size={18} />
-                                        </div>
-                                        <div className="relative flex-1">
-                                            <select
-                                                className="w-full h-full appearance-none bg-slate-50 border border-slate-200 rounded-r-xl rounded-l-none pl-4 pr-10 py-3 text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all cursor-pointer hover:bg-white"
-                                                value={formData.introduced_by || ''}
-                                                onChange={(e) => setFormData(prev => ({ ...prev, introduced_by: e.target.value }))}
-                                            >
-                                                <option value="">Select contact...</option>
-                                                {MOCK_CONTACTS.map(c => (
-                                                    <option key={c.id} value={c.name}>{c.name} ({c.role})</option>
-                                                ))}
-                                                <option value="add_new">+ Add new contact</option>
-                                            </select>
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                                <ChevronDown size={14} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
 
                             {/* Initial Notes */}
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-700">Initial Notes</label>
+                                <label className="block text-sm font-semibold text-slate-700">Initial Notes</label>
                                 <textarea
                                     rows={3}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 resize-none hover:bg-white"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 resize-none hover:bg-white"
                                     placeholder="Why this deal? First impressions?"
                                     value={formData.initial_notes || ''}
                                     onChange={(e) => setFormData(prev => ({ ...prev, initial_notes: e.target.value }))}
                                 />
-                                <div className="flex justify-end text-[10px] text-slate-400">
-                                    {(formData.initial_notes || '').length}/500
-                                </div>
                             </div>
 
-                            {/* TASK 3: Advanced */}
+                            {/* TASK 3: Expected Close & Syndicate */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-slate-700">Expected Close</label>
+                                    <label className="block text-sm font-semibold text-slate-700">Expected Close</label>
                                     <div className="flex items-stretch shadow-sm group">
-                                        <div className="w-10 flex items-center justify-center bg-slate-50 border border-slate-200 border-r-0 rounded-l-xl text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-500 transition-colors">
-                                            <Calendar size={16} />
+                                        <div className="w-11 flex items-center justify-center bg-slate-50 border border-slate-200 border-r-0 rounded-l-lg text-slate-400 group-hover:border-emerald-500/30 group-hover:text-emerald-500 transition-colors">
+                                            <Calendar size={18} />
                                         </div>
                                         <input
                                             type="date"
-                                            className="flex-1 w-full bg-slate-50 border border-slate-200 rounded-r-xl rounded-l-none pl-3 pr-3 py-3 text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all hover:bg-white"
+                                            className="flex-1 w-full h-11 bg-slate-50 border border-slate-200 rounded-r-lg rounded-l-none pl-3 pr-3 text-sm text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all hover:bg-white"
                                             value={formData.expected_close_date || ''}
                                             min={new Date().toISOString().split('T')[0]}
                                             onChange={(e) => setFormData(prev => ({ ...prev, expected_close_date: e.target.value }))}
@@ -502,83 +465,83 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess }: CreateDe
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-slate-700 flex justify-between">
-                                        Likelihood
-                                        <span className="text-emerald-600 font-bold">{formData.probability}%</span>
-                                    </label>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="100"
-                                        step="10"
-                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500 mt-3"
-                                        value={formData.probability}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, probability: parseInt(e.target.value) }))}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Syndicate Toggle */}
-                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
-                                        checked={formData.is_syndicate}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, is_syndicate: e.target.checked }))}
-                                    />
-                                    <span className="text-sm font-medium text-slate-700">This is a syndicate deal</span>
-                                </label>
-                                {formData.is_syndicate && (
-                                    <div className="mt-3 pl-7 animate-in fade-in slide-in-from-top-1">
-                                        <input
-                                            type="text"
-                                            placeholder="Syndicate Lead Name"
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-emerald-500 focus:ring-emerald-500 outline-none transition-all"
-                                            value={formData.syndicate_lead || ''}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, syndicate_lead: e.target.value }))}
-                                        />
+                                {/* Syndicate Toggle */}
+                                <div className="flex items-end h-full">
+                                    <div className="w-full h-11 pl-2 bg-white flex items-center">
+                                        <label className="flex items-center gap-3 cursor-pointer select-none group">
+                                            <input
+                                                type="checkbox"
+                                                className="w-5 h-5 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                                                checked={formData.is_syndicate}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, is_syndicate: e.target.checked }))}
+                                            />
+                                            <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">Syndicate Deal?</span>
+                                        </label>
                                     </div>
-                                )}
-                            </div>
-
-                            {/* Documents */}
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-700">Documents</label>
-                                <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-emerald-500 transition-colors cursor-pointer bg-slate-50/50 hover:bg-emerald-50/10">
-                                    <Upload className="mx-auto h-8 w-8 text-slate-300 mb-2" />
-                                    <p className="text-sm text-slate-600">
-                                        <span className="text-emerald-600 font-semibold">Click to upload</span> or drag and drop
-                                    </p>
-                                    <p className="text-xs text-slate-400 mt-1">PDF, DOCX, XLSX up to 10MB</p>
                                 </div>
                             </div>
+
+                            {formData.is_syndicate && (
+                                <div className="animate-in fade-in slide-in-from-top-1 -mt-3">
+                                    <input
+                                        type="text"
+                                        placeholder="Name of Syndicate Lead..."
+                                        className="w-full px-3 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-emerald-500 focus:ring-emerald-500 outline-none transition-all h-11"
+                                        value={formData.syndicate_lead || ''}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, syndicate_lead: e.target.value }))}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Compact Documents - Horizontal Layout */}
+                            <div className="border border-dashed border-slate-300 rounded-lg px-5 py-3 flex items-center justify-between hover:border-emerald-500/50 hover:bg-emerald-50/10 transition-colors cursor-pointer group" onClick={() => document.getElementById('file-upload')?.click()}>
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-slate-100 p-2 rounded-md text-slate-400 group-hover:text-emerald-500 group-hover:bg-emerald-50 transition-colors">
+                                        <Upload size={16} />
+                                    </div>
+                                    <div className="text-sm">
+                                        <span className="font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors">Add Documents</span>
+                                        <span className="text-slate-400 ml-1">(Optional)</span>
+                                    </div>
+                                </div>
+                                <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">PDF, DOCX</span>
+                                <input id="file-upload" type="file" multiple className="hidden" onChange={(e) => {
+                                    if (e.target.files) setUploadedFiles(Array.from(e.target.files));
+                                }} />
+                            </div>
+                            {/* File List */}
+                            {uploadedFiles.length > 0 && (
+                                <div className="space-y-1">
+                                    {uploadedFiles.map((file, idx) => (
+                                        <div key={idx} className="flex items-center justify-between px-3 py-2 bg-slate-50 rounded text-xs border border-slate-100">
+                                            <span className="truncate max-w-[200px] text-slate-600">{file.name}</span>
+                                            <button type="button" onClick={() => setUploadedFiles(fs => fs.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-red-500"><X size={14} /></button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
                         </form>
 
                         {/* Footer */}
-                        <div className="p-6 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-                            <p className="text-xs text-slate-500 font-medium hidden sm:block">All deals start in "Inbox" stage</p>
-                            <div className="flex gap-3 w-full sm:w-auto justify-end">
-                                <button
-                                    onClick={onClose}
-                                    className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleSubmit}
-                                    disabled={isSubmitting}
-                                    className="px-6 py-2.5 text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform active:scale-95 transition-all"
-                                >
-                                    {isSubmitting ? (
-                                        <> <Loader2 size={16} className="animate-spin" /> Creating... </>
-                                    ) : (
-                                        <> <Plus size={16} /> Create Deal </>
-                                    )}
-                                </button>
-                            </div>
+                        <div className="px-6 py-5 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-3 shrink-0">
+                            <button
+                                onClick={onClose}
+                                className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="px-6 py-2.5 text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-sm shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform active:scale-95 transition-all"
+                            >
+                                {isSubmitting ? (
+                                    <> <Loader2 size={16} className="animate-spin" /> Creating... </>
+                                ) : (
+                                    <> <Plus size={16} /> Create Deal </>
+                                )}
+                            </button>
                         </div>
                     </motion.div>
                 </div>

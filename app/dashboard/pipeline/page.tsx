@@ -16,10 +16,11 @@ const INITIAL_COLUMNS = {
     'diligence': { id: 'diligence', title: 'Due Diligence', dealIds: [] as string[] },
     'negotiation': { id: 'negotiation', title: 'Negotiation', dealIds: [] as string[] },
     'committed': { id: 'committed', title: 'Committed', dealIds: [] as string[] },
+    'done': { id: 'done', title: 'Done', dealIds: [] as string[] }, // Added Done column
     'passed': { id: 'passed', title: 'Passed', dealIds: [] as string[] }
 };
 
-const COLUMN_ORDER = ['inbox', 'diligence', 'negotiation', 'committed', 'passed'];
+const COLUMN_ORDER = ['inbox', 'diligence', 'negotiation', 'committed', 'done', 'passed'];
 
 function PipelineContent() {
     const [data, setData] = useState<{
@@ -50,7 +51,10 @@ function PipelineContent() {
             const res = await fetch('/api/pipeline/deals');
             const json = await res.json();
 
-            if (!json.data) throw new Error("No data");
+            if (!json.data) {
+                console.error("Pipeline Fetch Error:", json);
+                throw new Error(json.error || "No data received from API");
+            }
 
             const normalizedDeals: Record<string, Deal> = {};
             const newColumns = JSON.parse(JSON.stringify(INITIAL_COLUMNS));
@@ -62,7 +66,18 @@ function PipelineContent() {
                     companyName: deal.company?.name || 'Unknown',
                     logo: deal.company?.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(deal.company?.name || 'C')}&background=random`,
                     industry: deal.company?.sector ? [deal.company.sector] : [],
-                    website: deal.company?.website
+                    website: deal.company?.website,
+                    // New Mappings
+                    lastContact: deal.last_contact,
+                    lastContactType: deal.last_contact_type,
+                    closeDate: deal.expected_close_date ? new Date(deal.expected_close_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined,
+                    documentsCount: deal.documents_count,
+                    tier: deal.company?.verification_tier,
+                    score: deal.company?.confidence_score,
+                    // Network & Notes
+                    is_syndicate: deal.is_syndicate,
+                    syndicate_lead: deal.syndicate_lead,
+                    nextSteps: deal.notes // Mapping DB 'notes' to UI 'nextSteps'
                 };
 
                 normalizedDeals[deal.id] = uiDeal;
@@ -225,6 +240,7 @@ function PipelineContent() {
                 deal={selectedDeal}
                 isOpen={!!selectedDeal}
                 onClose={() => setSelectedDeal(null)}
+                onDealUpdate={fetchDeals}
             />
 
             {/* Create Deal Modal */}

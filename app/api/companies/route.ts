@@ -63,10 +63,11 @@ export async function GET(request: Request) {
         country_code: 'NG' // Defaulting to NG for now, or infer from country name
       },
       verification: {
-        overall_tier: row.verification_status === 'verified' ? 5 : 1,
+        overall_tier: row.verification_tier || (row.verification_status === 'verified' ? 5 : 1),
         tier_label: row.verification_status,
-        data_quality_score: row.data_quality_score,
-        regulatory_status: row.verification_status === 'verified' ? 'Fully Licensed' : 'Pending Verification'
+        data_quality_score: row.confidence_score || row.data_quality_score,
+        regulatory_status: row.verification_status === 'verified' ? 'Fully Licensed' : 'Pending Verification',
+        confidence_score: row.confidence_score
       },
       key_metrics: {
         funding_stage: row.funding_stage || (row.funding_rounds?.[0]?.round_name),

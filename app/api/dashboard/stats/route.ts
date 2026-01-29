@@ -16,11 +16,13 @@ export async function GET() {
             .from('deals')
             .select('*', { count: 'exact', head: true });
 
-        // 2. Active Due Diligence (Deals in 'due_diligence' stage)
-        const { count: diligenceDeals, error: diligenceError } = await supabase
+        // 2. Active Due Diligence (All Open Deals: inbox, diligence, negotiation, committed)
+        // User requested: "Active Diligence = Value of open deals". Interpreting as Count of Non-Passed/Non-Done deals.
+        const { count: activeDeals, error: activeError } = await supabase
             .from('deals')
             .select('*', { count: 'exact', head: true })
-            .eq('stage', 'due_diligence'); // Ensure this matches enum string in DB
+            .neq('stage', 'passed')
+            .neq('stage', 'done'); // Exclude 'done' as well per request
 
         // 3. Market Cap Tracked (Sum of current_value of all investments)
         // Note: Supabase .select() doesn't do SUM easily without rpc, so we fetch & reduce (okay for small dataset)
@@ -30,25 +32,21 @@ export async function GET() {
 
         const marketCap = investments?.reduce((sum, item) => sum + (item.current_value || 0), 0) || 0;
 
-        // 4. New Opportunities (Deals created in last 7 days)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        // 4. New Opportunities (Total Companies in DB)
+        const { count: totalCompanies, error: companiesError } = await supabase
+            .from('companies')
+            .select('*', { count: 'exact', head: true });
 
-        const { count: newDeals, error: newDealsError } = await supabase
-            .from('deals')
-            .select('*', { count: 'exact', head: true })
-            .gte('created_at', sevenDaysAgo.toISOString());
-
-        if (dealsError || diligenceError || investError || newDealsError) {
-            console.error('Stats Error:', dealsError || diligenceError || investError || newDealsError);
+        if (dealsError || activeError || investError || companiesError) {
+            console.error('Stats Error:', dealsError || activeError || investError || companiesError);
             throw new Error('Failed to fetch stats');
         }
 
         return NextResponse.json({
             total_deal_flow: totalDeals || 0,
-            active_diligence: diligenceDeals || 0,
+            active_diligence: activeDeals || 0,
             market_cap: marketCap,
-            new_opportunities: newDeals || 0
+            new_opportunities: totalCompanies || 0
         });
 
     } catch (error: any) {

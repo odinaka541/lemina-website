@@ -19,9 +19,16 @@ export interface Deal {
     ownerAvatar?: string;
     closeDate?: string;
     lastContact?: string;
+    lastContactType?: 'email' | 'call' | 'meeting' | 'note';
+    documentsCount?: number;
     industry?: string[];
     score?: number;
-    tier?: string;
+    tier?: number;
+    // Network/Syndicate fields
+    is_syndicate?: boolean;
+    syndicate_lead?: string;
+    // Relations
+    company?: Partial<Company>; // For accessing nested company data if needed
 }
 
 export interface Company {

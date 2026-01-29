@@ -20,8 +20,10 @@ export interface CompanyCardProps {
     flags?: string[];
     metrics: CompanyMetric[];
     isSaved?: boolean;
-    matchScore?: number; // 0-100
+    matchScore?: number; // Deprecated
     isVerified?: boolean;
+    verificationTier?: number;
+    confidenceScore?: number;
 }
 
 export default function CompanyCard({
@@ -37,17 +39,39 @@ export default function CompanyCard({
     metrics,
     isSaved = false,
     matchScore,
-    isVerified = false
+    isVerified = false,
+    verificationTier,
+    confidenceScore
 }: CompanyCardProps) {
     const displayMetrics = metrics;
 
     // Verification Tier Logic
-    const getVerificationColor = (score: number) => {
-        if (score >= 90) return 'bg-emerald-500 text-white'; // Tier 5 (Green)
-        if (score >= 80) return 'bg-blue-500 text-white';    // Tier 4 (Blue)
-        if (score >= 60) return 'bg-slate-500 text-white';   // Tier 3 (Gray)
-        if (score >= 40) return 'bg-amber-500 text-white';   // Tier 2 (Yellow)
-        return 'bg-red-500 text-white';                      // Tier 1 (Red)
+    const getVerificationColor = (tier?: number, score?: number) => {
+        // Prefer Tier if available
+        if (tier) {
+            if (tier === 5) return 'bg-emerald-500 text-white';
+            if (tier === 4) return 'bg-blue-500 text-white';
+            if (tier === 3) return 'bg-slate-500 text-white';
+            if (tier === 2) return 'bg-amber-500 text-white';
+            return 'bg-red-500 text-white';
+        }
+        // Fallback to Score
+        if (!score) return 'bg-slate-200';
+        if (score >= 90) return 'bg-emerald-500 text-white';
+        if (score >= 80) return 'bg-blue-500 text-white';
+        if (score >= 60) return 'bg-slate-500 text-white';
+        if (score >= 40) return 'bg-amber-500 text-white';
+        return 'bg-red-500 text-white';
+    };
+
+    const getTierLabel = (tier?: number) => {
+        switch (tier) {
+            case 5: return 'Tier 5: Govt Database';
+            case 4: return 'Tier 4: Founder Verified';
+            case 3: return 'Tier 3: Third Party';
+            case 2: return 'Tier 2: News Cross-ref';
+            default: return 'Tier 1: Self-Reported';
+        }
     };
 
     return (
@@ -75,9 +99,10 @@ export default function CompanyCard({
                             </h2>
                             <div className="flex items-center gap-2 mt-0.5">
                                 {/* Verification Color Indicator (Text-less pill) */}
+                                {/* Verification Color Indicator (Text-less pill) */}
                                 <div
-                                    className={`w-12 h-1.5 rounded-full ${matchScore !== undefined ? getVerificationColor(matchScore).split(' ')[0] : 'bg-slate-200'}`}
-                                    title={`Verification Tier: ${funding}`}
+                                    className={`w-12 h-1.5 rounded-full ${getVerificationColor(verificationTier, confidenceScore || matchScore).split(' ')[0]}`}
+                                    title={`${getTierLabel(verificationTier)} (${confidenceScore || matchScore || 0}% confidence)`}
                                 />
                                 <span className="text-[10px] text-[var(--color-text-secondary)]">HQ: {location}</span>
                             </div>

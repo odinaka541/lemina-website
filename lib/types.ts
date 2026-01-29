@@ -14,6 +14,10 @@ export interface Company {
     description?: string;
     industry?: string;
     stage?: string;
+    match_score?: number; // Deprecated: use confidence_score
+    verification_tier?: number; // 1-5
+    confidence_score?: number; // 0-100
+    verification_sources?: string[];
     founded_year?: number;
     website_url?: string;
     location?: string;

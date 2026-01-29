@@ -10,12 +10,26 @@ const supabase = createClient(
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const { data, error } = await supabase
+        const { searchParams } = new URL(request.url);
+        const dealId = searchParams.get('dealId');
+        const companyId = searchParams.get('companyId');
+
+        let query = supabase
             .from('documents')
             .select('*')
             .order('created_at', { ascending: false });
+
+        if (dealId) {
+            query = query.eq('deal_id', dealId);
+        }
+
+        if (companyId) {
+            query = query.eq('company_id', companyId);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
 

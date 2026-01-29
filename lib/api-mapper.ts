@@ -57,8 +57,10 @@ export function mapCompanyToList(apiCompany: any): CompanyCardProps {
         flags: apiCompany.headquarters?.country_code ? [apiCompany.headquarters.country_code.toLowerCase()] : [],
         metrics: metrics,
         // Defaulting these for now until API returns them
-        matchScore: undefined,
-        isVerified: apiCompany.verification_status === 'verified'
+        matchScore: apiCompany.verification?.data_quality_score, // Fallback support
+        isVerified: apiCompany.verification?.overall_tier >= 4, // Tier 4+ is "Verified"
+        verificationTier: apiCompany.verification?.overall_tier,
+        confidenceScore: apiCompany.verification?.confidence_score || apiCompany.verification?.data_quality_score
     };
 }
 

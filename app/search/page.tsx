@@ -1,5 +1,7 @@
 'use client';
 
+// TODO: This page should be hidden behind log in. Do not enforce this rule yet until we set up the magic link log in again, but note.
+
 import { useState, useEffect, Suspense } from 'react';
 import Navbar from '@/components/Navbar';
 import { Search, Filter, Shield, ArrowRight, CheckCircle2 } from 'lucide-react';
