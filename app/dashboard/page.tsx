@@ -12,7 +12,7 @@ import StatCard from '@/components/dashboard/StatCard';
 import TaskActionCard from '@/components/dashboard/TaskActionCard';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
 import OnboardingState from '@/components/dashboard/OnboardingState';
-import FilterBar from '@/components/dashboard/FilterBar';
+import FilterBar, { FilterState } from '@/components/dashboard/FilterBar';
 
 export default function DashboardPage() {
     const [companies, setCompanies] = useState<CompanyCardProps[]>([]);
@@ -28,13 +28,29 @@ export default function DashboardPage() {
         completed_deals: 0 // Adding mocked field
     });
 
+    // Filter State - Top Matches
+    const [filters, setFilters] = useState<FilterState>({
+        sector: [],
+        stage: [],
+        location: [],
+        verification: []
+    });
+
+    // Filter State - Trending
+    const [trendingFilters, setTrendingFilters] = useState<FilterState>({
+        sector: [],
+        stage: [],
+        location: [],
+        verification: []
+    });
+
     const [user] = useState({ name: 'Odinaka' });
 
     useEffect(() => {
         async function fetchData() {
             try {
                 // 1. Fetch Companies
-                const resCompanies = await fetch('/api/companies?limit=10');
+                const resCompanies = await fetch('/api/companies?limit=20'); // Fetch more to show filtering better
                 if (resCompanies.ok) {
                     const json = await resCompanies.json();
                     setCompanies(json.data.map(mapCompanyToList));
@@ -73,8 +89,34 @@ export default function DashboardPage() {
         fetchData();
     }, []);
 
-    const recommended = companies.slice(0, 4);
-    const trending = companies.slice(4, 8);
+    // --- Filtering Logic ---
+    const getVerificationTier = (score: number) => {
+        if (score >= 90) return 'Tier 5 (90+)';
+        if (score >= 80) return 'Tier 4 (80-89)';
+        if (score >= 60) return 'Tier 3 (60-79)';
+        if (score >= 40) return 'Tier 2 (40-59)';
+        return 'Tier 1 (<40)';
+    };
+
+    const applyFilters = (list: CompanyCardProps[], activeFilters: FilterState) => {
+        return list.filter(company => {
+            const sectorMatch = activeFilters.sector.length === 0 || activeFilters.sector.some(s => company.description.toLowerCase().includes(s.toLowerCase()));
+            const stageMatch = activeFilters.stage.length === 0 || activeFilters.stage.some(s => company.funding.toLowerCase().includes(s.toLowerCase()));
+            const locationMatch = activeFilters.location.length === 0 || activeFilters.location.some(l => company.location.includes(l));
+            const tier = getVerificationTier(company.matchScore || 0);
+            const verificationMatch = activeFilters.verification.length === 0 || activeFilters.verification.includes(tier);
+
+            return sectorMatch && stageMatch && locationMatch && verificationMatch;
+        });
+    };
+
+    // Split initial list into Recommended and Trending (Mock logic: first 10 recommended, next 10 trending)
+    // In a real app, these might come from separate API endpoints or flags.
+    const initialRecommended = companies.slice(0, 10);
+    const initialTrending = companies.slice(10, 20);
+
+    const recommended = applyFilters(initialRecommended, filters).slice(0, 4);
+    const trending = applyFilters(initialTrending, trendingFilters).slice(0, 4);
 
     const isNewUser = stats.active_diligence === 0 && stats.market_cap === 0;
 
@@ -111,7 +153,6 @@ export default function DashboardPage() {
             {/* Stats Grid - 3 Horizontal Compact Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-                {/* 1. Pending Actions (List View) */}
                 {/* 1. Pending Actions (List View) */}
                 <TaskActionCard tasks={tasks} />
 
@@ -155,7 +196,7 @@ export default function DashboardPage() {
                         <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-1">
-                                    <Zap size={20} className="text-amber-500 fill-amber-500" />
+                                    <Zap size={20} className="text-slate-400 fill-slate-400" /> {/* Grayscale Icon */}
                                     Top Matches for Fintech Investors
                                 </h2>
                                 <p className="text-sm text-slate-500 font-medium">Here are companies that match your investment thesis.</p>
@@ -168,8 +209,8 @@ export default function DashboardPage() {
                             </Link>
                         </div>
 
-                        {/* Phase 2: Filters */}
-                        <FilterBar />
+                        {/* Top Matches Filters */}
+                        <FilterBar filters={filters} onFilterChange={setFilters} />
 
                         {isLoading ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -179,17 +220,16 @@ export default function DashboardPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {recommended.slice(0, 2).map((company, i) => (
+                                {recommended.map((company, i) => (
                                     <CompanyCard
                                         key={company.id}
                                         {...company}
-                                        matchScore={i === 0 ? 98 : 95} // Mock Intelligence
-                                        isVerified={true} // Mock Verification
+                                        matchScore={company.matchScore || (i === 0 ? 98 : 95)} // Use data score or fallback
                                     />
                                 ))}
                                 {recommended.length === 0 && (
                                     <div className="col-span-2 py-10 text-center border-2 border-dashed border-slate-200 rounded-xl">
-                                        <p className="text-slate-400">No recommendations available yet.</p>
+                                        <p className="text-slate-400">No companies found matching current filters.</p>
                                     </div>
                                 )}
                             </div>
@@ -201,12 +241,16 @@ export default function DashboardPage() {
                         <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-1">
-                                    <TrendingUp size={20} className="text-emerald-500" />
+                                    <TrendingUp size={20} className="text-slate-400" /> {/* Grayscale Icon */}
                                     Trending in Network
                                 </h2>
                                 <p className="text-sm text-slate-500 font-medium">Rising stars with high investor momentum.</p>
                             </div>
                         </div>
+
+                        {/* Trending Filters (Independent) */}
+                        <FilterBar filters={trendingFilters} onFilterChange={setTrendingFilters} />
+
                         {isLoading ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {[1, 2].map(n => (
@@ -215,9 +259,14 @@ export default function DashboardPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {trending.slice(0, 2).map(company => (
+                                {trending.map(company => (
                                     <CompanyCard key={company.id} {...company} />
                                 ))}
+                                {trending.length === 0 && (
+                                    <div className="col-span-2 py-10 text-center border-2 border-dashed border-slate-200 rounded-xl">
+                                        <p className="text-slate-400">No trending companies found.</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </section>

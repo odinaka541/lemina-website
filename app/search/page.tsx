@@ -75,13 +75,11 @@ function SearchPageContent() {
     };
 
     return (
-    return (
         <div className="min-h-screen bg-slate-50 overflow-hidden relative" data-theme="light">
             <div className="gradient-bg opacity-50" />
             <Navbar />
 
             <main className="container mx-auto px-4 py-8">
-                {/* Search Header */}
                 {/* Search Header */}
                 <div className="max-w-4xl mx-auto mb-10 text-center">
                     <h1 className="text-3xl font-bold text-slate-900 mb-4">

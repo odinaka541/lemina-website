@@ -12,7 +12,7 @@ export default function OnboardingState() {
             <div className="relative z-10 max-w-2xl">
                 <h2 className="text-2xl font-bold text-indigo-950 mb-2 tracking-tight">Welcome to Your Investor Dashboard</h2>
                 <p className="text-slate-600 mb-8 max-w-lg text-sm leading-relaxed">
-                    Your personalized workspace for measuring, tracking, and managing deal flow is ready. Here are 3 steps to get started:
+                    Your personalized workspace for finding, tracking, and managing deal flow is ready. Here are 3 steps to get started:
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
