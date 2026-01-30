@@ -197,7 +197,7 @@ export default function DashboardPage() {
                             <div>
                                 <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-1">
                                     <Zap size={20} className="text-slate-400 fill-slate-400" /> {/* Grayscale Icon */}
-                                    Top Matches for Fintech Investors
+                                    Top matches for you
                                 </h2>
                                 <p className="text-sm text-slate-500 font-medium">Here are companies that match your investment thesis.</p>
                             </div>

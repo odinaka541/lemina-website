@@ -75,8 +75,8 @@ export default function DealCard({ deal, index, onClick }: DealCardProps) {
                                 >
                                     {deal.companyName || 'Company Name'}
                                 </a>
-                                {/* Verification Badge - Only Tier 3+ */}
-                                {deal.tier && deal.tier >= 3 && (
+                                {/* Verification Badge - Show for all verified tiers */}
+                                {deal.tier && deal.tier > 0 && (
                                     <div className={`w-2 h-2 rounded-full ${getVerificationColor(deal.tier, deal.score).split(' ')[0]}`} title={`Verified Tier ${deal.tier}`} />
                                 )}
                             </div>
@@ -157,7 +157,7 @@ export default function DealCard({ deal, index, onClick }: DealCardProps) {
 
                             {deal.closeDate && (
                                 <div className="text-[10px] font-medium text-[var(--color-text-secondary)]">
-                                    Est: {deal.closeDate}
+                                    Est: {new Date(deal.closeDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 </div>
                             )}
                         </div>

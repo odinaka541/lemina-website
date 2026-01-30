@@ -3,23 +3,34 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Briefcase, Calendar, CheckCircle2, Copy, Download, Globe, MapPin, MoreHorizontal, PieChart, Send, Share2, Plus } from 'lucide-react';
+import { ArrowLeft, Briefcase, Calendar, CheckCircle2, Copy, Download, Globe, MapPin, MoreHorizontal, PieChart, Send, Share2, Plus, Activity, Zap } from 'lucide-react';
 import { mapCompanyToDetail } from '@/lib/api-mapper';
+import { createClient } from '@/lib/supabase/client';
+import { Investment, PortfolioAnalysis } from '@/lib/types';
 
-// Tab Components (Imports will be active once files are created)
+// Tab Components
 import OverviewTab from '@/components/company/tabs/OverviewTab';
 import MarketTab from '@/components/company/tabs/MarketTab';
 import TeamLegalTab from '@/components/company/tabs/TeamLegalTab';
 import CommercialsTab from '@/components/company/tabs/CommercialsTab';
 import NewsTab from '@/components/company/tabs/NewsTab';
+import DocumentsTab from '@/components/company/tabs/DocumentsTab';
+import MetricsTab from '@/components/company/tabs/MetricsTab';
+import TimelineTab from '@/components/company/tabs/TimelineTab';
+
 import AIAnalysisCard from '@/components/market/AIAnalysisCard';
+import AIHealthBanner from '@/components/company/AIHealthBanner';
+import AIAnalysisModal from '@/components/company/AIAnalysisModal';
 
 
 const TABS = [
     { id: 'overview', label: 'Overview' },
+    { id: 'metrics', label: 'Metrics' },
+    { id: 'timeline', label: 'Timeline' },
+    { id: 'documents', label: 'Documents & Analysis' },
     { id: 'market', label: 'Market' },
     { id: 'team-legal', label: 'Team & Legal' },
-    { id: 'commercials', label: 'Commercials & Financials' },
+    // { id: 'commercials', label: 'Commercials & Financials' },
     { id: 'news', label: 'News' },
 ];
 
@@ -29,34 +40,52 @@ export default function CompanyPage() {
 
     // State for fetching real data
     const [company, setCompany] = useState<any>(null);
+    const [investment, setInvestment] = useState<Investment | null>(null);
+    const [latestAnalysis, setLatestAnalysis] = useState<PortfolioAnalysis | null>(null);
+    const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch data using the mapper
     const { id } = params;
-
-    // Import mapper dynamically if needed, or use the imported one (need to add import)
-    // For now assuming `mapCompanyToDetail` is imported at top.
+    const supabase = createClient();
 
     useEffect(() => {
         if (!id) return;
 
         async function init() {
             try {
+                // 1. Fetch Company Profile
                 const res = await fetch(`/api/companies/${id}`);
                 if (!res.ok) throw new Error('Company not found');
                 const json = await res.json();
-
-                // Map the RAW API payload to our frontend profile structure
-                // We need to import mapCompanyToDetail. 
-                // Since I cannot add import in this tool call easily without breaking file structure in restricted edit, I'll rely on a second tool call to add imports.
-                // Or I can copy the import here if I replace the whole file. 
-                // Strategies: I'm replacing lines 23-181. I will assume imports are handled or I will add imports in a separate call.
-                // Wait, I should do imports first or together.
-
-                // Let's assume the function is valid.
                 const mappedProfile = mapCompanyToDetail(json);
                 setCompany(mappedProfile);
+
+                // 2. Fetch Investment Context (if any)
+                const { data: invData } = await supabase
+                    .from('investments')
+                    .select('*')
+                    .eq('company_id', id)
+                    .maybeSingle();
+
+                if (invData) {
+                    setInvestment(invData as any);
+
+                    // 3. Fetch Latest Analysis
+                    const { data: analysisData } = await supabase
+                        .from('portfolio_analyses')
+                        .select('*')
+                        .eq('investment_id', invData.id)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (analysisData) {
+                        setLatestAnalysis(analysisData as PortfolioAnalysis);
+                    }
+                }
+
             } catch (err: any) {
                 console.error("Failed to load company", err);
                 setError(err.message);
@@ -71,9 +100,11 @@ export default function CompanyPage() {
     const renderTabContent = () => {
         if (!company) return null;
 
-        // Pass the REAL data to tabs
         switch (activeTab) {
             case 'overview': return <OverviewTab company={company} />;
+            case 'metrics': return <MetricsTab company={company} />;
+            case 'timeline': return <TimelineTab investment={investment} />;
+            case 'documents': return <DocumentsTab investmentId={investment?.id} companyId={company.id} />;
             case 'market': return <MarketTab company={company} />;
             case 'team-legal': return <TeamLegalTab />;
             case 'commercials': return <CommercialsTab />;
@@ -90,6 +121,9 @@ export default function CompanyPage() {
         return <div className="min-h-screen flex items-center justify-center text-rose-500">Error: {error || 'Company not found'}</div>;
     }
 
+    // Filter tabs
+    const visibleTabs = TABS.filter(t => ['metrics', 'timeline', 'documents'].includes(t.id) ? !!investment : true);
+
     return (
         <div className="min-h-screen bg-transparent pb-32">
             {/* Header / Sticky Top */}
@@ -97,16 +131,13 @@ export default function CompanyPage() {
                 <div className="container mx-auto px-4 py-2">
                     {/* Navigation Actions */}
                     <div className="flex items-center justify-between mb-2">
-                        <Link href="/dashboard" className="flex items-center gap-2 text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)] transition-colors text-xs">
+                        <Link href="/dashboard/portfolio" className="flex items-center gap-2 text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)] transition-colors text-xs">
                             <ArrowLeft size={14} />
-                            Back to Dashboard
+                            Back to Portfolio
                         </Link>
                         <div className="flex items-center gap-2">
                             <button className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors">
                                 <Share2 size={16} />
-                            </button>
-                            <button className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors">
-                                <Download size={16} />
                             </button>
                         </div>
                     </div>
@@ -114,8 +145,8 @@ export default function CompanyPage() {
                     {/* Company Identity */}
                     <div className="flex items-start justify-between gap-4 mb-2">
                         <div className="flex gap-4">
-                            {company.logo ? (
-                                <img src={company.logo} alt={company.name} className="w-14 h-14 rounded-xl object-contain bg-white border border-[var(--color-border)] p-1" />
+                            {company.logo || company.logo_url ? (
+                                <img src={company.logo || company.logo_url} alt={company.name} className="w-14 h-14 rounded-xl object-contain bg-white border border-[var(--color-border)] p-1" />
                             ) : (
                                 <div className="w-14 h-14 rounded-xl bg-white shadow-sm border border-[var(--color-border)] flex items-center justify-center text-xl font-bold text-gray-900 overflow-hidden relative">
                                     {company.name.charAt(0)}
@@ -123,54 +154,26 @@ export default function CompanyPage() {
                             )}
 
                             <div>
-                                <h1 className="text-xl font-bold text-[var(--color-text-primary)] mb-0.5">{company.name}</h1>
-                                <p className="text-[var(--color-text-secondary)] text-xs mb-2 max-w-xl line-clamp-1">{company.description}</p>
+                                <h1 className="text-xl font-bold text-[var(--color-text-primary)] mb-0.5 flex items-center gap-2">
+                                    {company.name}
+                                    {investment && (
+                                        <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full border border-emerald-200 uppercase tracking-wide">Portfolio</span>
+                                    )}
+                                </h1>
+                                <p className="text-[var(--color-text-secondary)] text-xs mb-2 max-w-xl line-clamp-1">{company.description_short || company.description}</p>
 
-                                {/* Tags */}
-                                <div className="flex flex-wrap gap-2 mb-2">
-                                    {company.tags.map((tag: string, index: number) => (
-                                        <span key={index} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
-
+                                {/* Tags & Location */}
                                 <div className="flex items-center gap-4 text-[10px] text-[var(--color-text-secondary)] mb-2">
                                     <div className="flex items-center gap-1.5">
                                         <MapPin size={10} />
-                                        {company.location}
-                                        {/* Flags - hardcoded NG for now or mapped */}
-                                        <div className="flex items-center gap-1 ml-1">
-                                            <img
-                                                src="https://flagcdn.com/w20/ng.png"
-                                                alt="Nigeria"
-                                                className="w-4 h-3 object-cover rounded-[1px]"
-                                            />
-                                        </div>
+                                        {company.metadata?.headquarters?.city || company.location || 'Unknown'}
                                     </div>
                                     {company.website && (
-                                        <a href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[var(--color-accent-primary)] hover:underline">
+                                        <a href={company.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[var(--color-accent-primary)] hover:underline">
                                             <Globe size={10} />
-                                            {company.website.replace(/^https?:\/\//, '')}
+                                            {company.website.replace(/^https?:\/\//, '').split('/')[0]}
                                         </a>
                                     )}
-                                </div>
-                                <div className="text-[10px] text-[var(--color-text-secondary)] opacity-60 mb-2">
-                                    Last updated: {company.lastUpdated}
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    <button className="py-1.5 px-3 bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-secondary)] text-white text-xs font-medium rounded-lg transition-colors shadow-lg shadow-emerald-900/20 flex items-center gap-1.5">
-                                        <Briefcase size={14} />
-                                        Add to Pipeline
-                                    </button>
-                                    <button className="py-1.5 px-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-lg transition-colors shadow-sm flex items-center gap-1.5">
-                                        <Share2 size={14} />
-                                        Share with Network
-                                    </button>
-                                    <span className="px-2 py-1 rounded-lg bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider border border-blue-200 shadow-sm">
-                                        {company.stage}
-                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -195,16 +198,20 @@ export default function CompanyPage() {
                                 </div>
                             </div>
 
-                            {/* AI Analysis Button/Card */}
+                            {/* AI Analysis */}
                             <div className="flex-1 min-w-[300px]">
-                                <AIAnalysisCard companyId={company.id} />
+                                {latestAnalysis ? (
+                                    <AIHealthBanner analysis={latestAnalysis} onClick={() => setIsAnalysisModalOpen(true)} />
+                                ) : (
+                                    <AIAnalysisCard companyId={company.id} />
+                                )}
                             </div>
                         </div>
                     </div>
 
                     {/* Tabs Navigation */}
                     <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-[var(--color-border)] pt-1">
-                        {TABS.map(tab => (
+                        {visibleTabs.map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
@@ -224,12 +231,21 @@ export default function CompanyPage() {
             </div>
 
             {/* Tab Content */}
-            <div className="container mx-auto px-4 pt-40 pb-12">
+            <div className="container mx-auto px-4 pt-8 pb-12">
                 {renderTabContent()}
             </div>
 
-            {/* Bottom Spacer */}
             <div className="h-32 w-full" aria-hidden="true" />
+
+            {/* AI Analysis Modal */}
+            {latestAnalysis && (
+                <AIAnalysisModal
+                    isOpen={isAnalysisModalOpen}
+                    onClose={() => setIsAnalysisModalOpen(false)}
+                    analysis={latestAnalysis}
+                    companyName={company.name}
+                />
+            )}
         </div >
     );
 }

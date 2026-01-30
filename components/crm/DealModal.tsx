@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, DollarSign, Activity, FileText, CheckSquare, Clock, ArrowRight, ExternalLink, MessageSquare, Phone, Mail, MoreHorizontal, Timer, Trash2, Share2, Edit, Save, AlertCircle } from 'lucide-react';
+import { X, Calendar, DollarSign, Activity, FileText, CheckSquare, Clock, ArrowRight, ExternalLink, MessageSquare, Phone, Mail, MoreHorizontal, Timer, Trash2, Share2, Edit, Save, AlertCircle, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/components/providers/ToastProvider';
 import { Deal } from '@/types';
 
 interface DealModalProps {
@@ -13,6 +14,7 @@ interface DealModalProps {
 }
 
 export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealModalProps) {
+    const { showToast } = useToast();
     const [notes, setNotes] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
@@ -27,6 +29,8 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
         closeDate: ''
     });
 
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
     useEffect(() => {
         if (deal) {
             setNotes(deal.nextSteps || '');
@@ -39,12 +43,19 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
         }
         setShowMenu(false);
         setIsEditing(false);
+        setShowDeleteConfirm(false);
     }, [deal, isOpen]);
 
     const fetchDocuments = async (dealId: string) => {
         setIsLoadingDocs(true);
         try {
-            const res = await fetch(`/api/documents?dealId=${dealId}`);
+            // Fetch documents for both deal and company contexts
+            const companyId = deal?.company?.id || (deal as any).company_id;
+            const url = companyId
+                ? `/api/documents?dealId=${dealId}&companyId=${companyId}`
+                : `/api/documents?dealId=${dealId}`;
+
+            const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
                 setDocuments(data);
@@ -56,8 +67,13 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
         }
     };
 
-    const handleDelete = async () => {
-        if (!deal || !confirm('Are you sure you want to delete this deal?')) return;
+    const handleDelete = () => {
+        setShowDeleteConfirm(true);
+        setShowMenu(false);
+    };
+
+    const confirmDelete = async () => {
+        if (!deal) return;
         try {
             await fetch(`/api/pipeline/deals?id=${deal.id}`, { method: 'DELETE' });
             if (onDealUpdate) onDealUpdate();
@@ -70,9 +86,11 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
     const handleShare = () => {
         const text = `Check out this deal: ${deal?.companyName} - $${deal?.amount}`; // Simple share text
         navigator.clipboard.writeText(text);
-        alert('Deal info copied to clipboard!'); // Simple feedback
+        showToast('Deal info copied to clipboard!', 'success'); // Use toast if available, or keep alert fallback but prefer premium feel
         setShowMenu(false);
     };
+
+    // ... (keep handleSaveEdit and handleSaveNotes same) ...
 
     const handleSaveEdit = async () => {
         if (!deal) return;
@@ -92,12 +110,17 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
             });
             if (onDealUpdate) onDealUpdate();
             setIsEditing(false);
+            showToast('Deal updated successfully', 'success');
         } catch (error) {
             console.error('Failed to save edits', error);
+            showToast('Failed to save changes', 'error');
         } finally {
             setIsSaving(false);
         }
     };
+
+    // ... inside render ...
+
 
     const handleSaveNotes = async () => {
         if (!deal) return;
@@ -112,8 +135,10 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
                 })
             });
             if (onDealUpdate) onDealUpdate();
+            showToast('Notes updated successfully', 'success');
         } catch (error) {
             console.error('Failed to save notes', error);
+            showToast('Failed to save notes', 'error');
         } finally {
             setIsSaving(false);
         }
@@ -175,8 +200,34 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
                                 e.stopPropagation();
                                 setShowMenu(false);
                             }}
-                            className="w-full max-w-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                            className="w-full max-w-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative"
                         >
+                            {/* Delete Confirmation Overlay */}
+                            {showDeleteConfirm && (
+                                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-[60] flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                                        <AlertTriangle size={32} />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Delete this deal?</h3>
+                                    <p className="text-[var(--color-text-secondary)] mb-8 max-w-xs mx-auto leading-relaxed">
+                                        This action cannot be undone. All data, notes, and history associated with this deal will be permanently removed.
+                                    </p>
+                                    <div className="flex gap-4 w-full max-w-xs">
+                                        <button
+                                            onClick={() => setShowDeleteConfirm(false)}
+                                            className="flex-1 py-3 px-4 text-sm font-semibold text-[var(--color-text-primary)] bg-[var(--input-bg)] hover:bg-[var(--color-border)] rounded-xl transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={confirmDelete}
+                                            className="flex-1 py-3 px-4 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-600/20 transition-all hover:scale-105 active:scale-95"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                             {/* Header */}
                             <div className="p-6 pb-4 border-b border-[var(--color-border)] flex justify-between items-start">
                                 <div className="flex items-center gap-4">
@@ -406,9 +457,9 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
                                         </button>
                                         <button
                                             onClick={handleSaveEdit}
-                                            className="flex-1 py-3 px-4 text-sm font-semibold text-white bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-secondary)] rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
+                                            className="flex-1 py-3 px-4 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-lg shadow-slate-900/10 active:scale-95 flex items-center justify-center"
                                         >
-                                            <Save size={18} /> Save Changes
+                                            {isSaving ? 'Saving...' : 'Save Changes'}
                                         </button>
                                     </>
                                 ) : (

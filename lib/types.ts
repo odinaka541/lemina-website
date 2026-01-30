@@ -8,22 +8,21 @@ export interface VerificationData {
 }
 
 export interface Company {
-    id: number;
+    id: number | string; // Support both for legacy/new compat
     name: string;
     logo_url?: string;
     description?: string;
     industry?: string;
     stage?: string;
-    match_score?: number; // Deprecated: use confidence_score
-    verification_tier?: number; // 1-5
     confidence_score?: number; // 0-100
+    verification_tier?: number; // 1-5
     verification_sources?: string[];
     founded_year?: number;
     website_url?: string;
     location?: string;
     employee_count?: number;
 
-    // Financials (Optional - access control applied usually)
+    // Financials
     total_funding?: number;
     last_valuation?: number;
     revenue_arr?: number;
@@ -32,62 +31,121 @@ export interface Company {
 }
 
 export interface Investment {
-    id: string; // Portfolio Investment UUID
-    company_id: number;
-    company?: Company; // Joined data
+    id: string; // UUID
+    company_id: number | string;
+    company?: Company;
 
     amount_invested: number;
-    current_value: number;
-    share_class: string; // 'SAFE' | 'Series A' etc
-    investment_date: string;
+    invested_date: string;
+    round_type: 'Seed' | 'Series A' | 'Series B' | 'SAFE' | 'Convertible Note' | 'Other';
+    valuation_at_investment?: number;
     ownership_percentage?: number;
 
-    // Computed
-    moic?: string;
+    // Current Status
+    current_valuation: number;
+    status: 'active' | 'at_risk' | 'exited' | 'monitoring';
+    ai_health_score?: number; // 0-100
+
+    // Computed/Enriched
+    moic?: number; // e.g. 1.5
+    irr?: number; // e.g. 0.25 (25%)
     trend?: 'up' | 'down' | 'flat';
-}
-
-export interface AIAnalysis {
-    executive_summary: string;
-    key_strengths: Array<{
-        category: string;
-        point: string;
-        confidence: 'High' | 'Medium' | 'Low';
-    }>;
-    red_flags: Array<{
-        severity: 'Critical' | 'High' | 'Medium' | 'Low';
-        flag: string;
-        recommendation: string;
-    }>;
-    investment_recommendation: {
-        verdict: 'Buy' | 'Watch' | 'Pass';
-        confidence: number;
-        reasoning: string;
-    };
-    generated_at?: string;
-    model_used?: string;
-}
-
-export interface Deal {
-    id: number;
-    company_id: number;
-    company?: Company;
-    stage: 'Inbox' | 'Screening' | 'Due Diligence' | 'Investment Committee' | 'Offer' | 'Closed' | 'Passed';
-    deal_lead?: string;
-    probability: number;
-    amount: number;
-    expected_close_date?: string;
-    created_at: string;
+    last_updated?: string;
 }
 
 export interface PortfolioDocument {
     id: string;
-    company_id?: number | null;
+    investment_id?: string;
+    company_id?: number | string; // Fallback
     title: string;
-    url: string;
-    type: 'Contract' | 'Report' | 'Deck' | 'Other';
+    url: string; // Supabase public URL
+    type: 'Contract' | 'Report' | 'Deck' | 'Financials' | 'Other';
     file_size?: string;
     created_at: string;
+    uploaded_at?: string;
+
+    // AI Status
+    analysis_status?: 'pending' | 'processing' | 'completed' | 'failed';
+    analysis_id?: string;
+}
+
+export interface PortfolioAnalysis {
+    id: string;
+    document_id: string;
+    investment_id: string;
+    created_at: string;
+
+    // AI Extracted Data
+    extracted_metrics: {
+        revenue?: { value: string; unit: string; change_yoy?: string };
+        burn_rate?: { value: string; unit: string; change_qoq?: string };
+        runway?: { value: number; unit: string };
+        team_size?: { value: number };
+        customers?: { value: number };
+    };
+
+    health_score: number;
+    health_status: 'healthy' | 'monitoring' | 'at_risk';
+
+    // Textual Assessment
+    ai_assessment: string;
+    strengths: string[];
+    concerns: string[];
+    risks: string[];
+
+    // Investment Implications
+    investment_value?: {
+        conservative: number;
+        optimistic: number;
+        current_stake: string;
+    };
+
+    recommendation: string;
+    next_action: string;
+    risk_level: 'Low' | 'Medium' | 'High' | 'Critical';
+    opportunities: string[];
+    strategic_recommendations: string[];
+    confidence_score: number;
+}
+
+export interface Deal {
+    id: string; // Normalized to string/uuid for consistnecy
+    company_id: number | string;
+    companyName?: string; // Flattened for UI
+    logo?: string;
+
+    company?: Company;
+    stage: 'inbox' | 'screening' | 'due_diligence' | 'investment_committee' | 'offer' | 'closed_won' | 'closed_lost';
+    deal_lead?: string;
+    probability?: number;
+    amount: number;
+    priority?: 'High' | 'Medium' | 'Low';
+
+    expected_close_date?: string; // ISO
+    closeDate?: string; // ISO raw
+
+    created_at: string;
+    last_contact?: string;
+    notes?: string;
+    ownerName?: string;
+    ownerAvatar?: string;
+
+    // Enriched
+    tier?: number;
+    score?: number;
+    documentsCount?: number;
+    is_syndicate?: boolean;
+    syndicate_lead?: string;
+    industry?: string[];
+}
+
+export interface MetricsState {
+    totalInvested: string;
+    currentValue: string;
+    moic: string;
+    netIrr: string;
+    healthScore: number;
+    activeCompanies: number;
 }
 
 export interface Task {

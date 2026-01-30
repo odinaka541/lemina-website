@@ -13,6 +13,7 @@ interface CreateDealModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    defaultStage?: string;
 }
 
 interface Company {
@@ -54,7 +55,7 @@ const MOCK_CONTACTS: NetworkContact[] = [
     { id: '3', name: 'Sarah Chen', role: 'VC Associate' }
 ];
 
-export default function CreateDealModal({ isOpen, onClose, onSuccess }: CreateDealModalProps) {
+export default function CreateDealModal({ isOpen, onClose, onSuccess, defaultStage }: CreateDealModalProps) {
     const { showToast } = useToast();
 
     // Data State
@@ -173,7 +174,7 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess }: CreateDe
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     companyId: companyId, // Note: API expects companyId (camelCase) based on previous code
-                    stage: 'inbox',
+                    stage: defaultStage || 'inbox',
                     amount: Number(formData.investment_amount),
                     // probability removed from UI, defaulting API side
                     round_size: formData.round_size ? Number(formData.round_size) : Number(formData.investment_amount),

@@ -9,6 +9,8 @@ interface UploadDocumentModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: (doc: PortfolioDocument) => void;
+    investmentId?: string;
+    companyId?: string;
 }
 
 import { createClient } from '@supabase/supabase-js';
@@ -18,7 +20,7 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default function UploadDocumentModal({ isOpen, onClose, onSuccess }: UploadDocumentModalProps) {
+export default function UploadDocumentModal({ isOpen, onClose, onSuccess, investmentId, companyId }: UploadDocumentModalProps) {
     const { showToast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,23 +43,20 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess }: Uplo
 
         try {
             // 1. Upload to Supabase Storage
-            const fileName = `${Math.random().toString(36).substring(7)}_${fileLocal.name.replace(/\s+/g, '_')}`;
+            // Use different path structure if investmentId exists?
+            const pathPrefix = investmentId ? `portfolio/${investmentId}` : 'documents';
+            const fileName = `${pathPrefix}/${Math.random().toString(36).substring(7)}_${fileLocal.name.replace(/\s+/g, '_')}`;
+
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('documents')
                 .upload(fileName, fileLocal);
 
             if (uploadError) throw uploadError;
 
-            // 2. Generate Signed URL (valid for 10 years for MVP simplicity)
-            // Ideally, we store the path and sign on demand, but this fits the current string 'url' schema.
-            const { data: signedData, error: signError } = await supabase.storage
+            // 2. Generate Public/Signed URL
+            const { data: urlData } = supabase.storage
                 .from('documents')
-                .createSignedUrl(uploadData.path, 315360000);
-
-            if (signError) throw signError;
-            if (!signedData?.signedUrl) throw new Error('Failed to generate URL');
-
-            const fileSize = `${(fileLocal.size / 1024 / 1024).toFixed(1)} MB`;
+                .getPublicUrl(uploadData.path);
 
             // 3. Create DB Record
             const res = await fetch('/api/documents', {
@@ -66,8 +65,13 @@ export default function UploadDocumentModal({ isOpen, onClose, onSuccess }: Uplo
                 body: JSON.stringify({
                     title,
                     type,
-                    url: signedData.signedUrl,
-                    file_size: fileSize
+                    url: urlData.publicUrl,
+                    file_size: `${(fileLocal.size / 1024 / 1024).toFixed(1)} MB`,
+                    investment_id: investmentId,
+                    company_id: companyId,
+                    file_path: uploadData.path,
+                    file_name: fileLocal.name,
+                    file_type: fileLocal.type || 'application/pdf'
                 })
             });
 

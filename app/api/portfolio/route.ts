@@ -1,7 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { Investment } from '@/lib/types';
+import { Investment, MetricsState } from '@/lib/types';
 
 // Service role to access all investments safely
 const supabase = createClient(
@@ -14,39 +14,47 @@ export const dynamic = 'force-dynamic'; // Ensure no caching of financial data
 export async function GET() {
     try {
         // 1. Fetch investments with company details
-        // 1. Fetch investments with company details
         const { data: investments, error } = await supabase
             .from('investments')
             .select(`
                 *,
-                company:companies(id, name, logo_url, industry, stage)
+                company:companies(id, name, logo_url, sector, funding_stage, verification_tier, confidence_score)
             `)
-            .order('investment_date', { ascending: false });
+            .order('invested_date', { ascending: false });
 
         if (error) throw error;
 
         // 2. Calculate Aggregates
         let totalInvested = 0;
         let totalCurrentValue = 0;
+        let totalHealthScore = 0;
+        let activeCount = 0;
         const sectorAllocation: Record<string, number> = {};
         const stageAllocation: Record<string, number> = {};
 
         const portfolioItems: Investment[] = investments.map((inv: any) => {
             const invested = parseFloat(inv.amount_invested);
-            const current = parseFloat(inv.current_value) || 0; // Default to 0 if not set
+            const current = parseFloat(inv.current_value) || invested; // Fallback to invested if unknown
 
+            // Metrics per asset
+            const moic = invested > 0 ? parseFloat((current / invested).toFixed(2)) : 0;
+            const trend: 'up' | 'down' | 'flat' = current > invested ? 'up' : current < invested ? 'down' : 'flat';
+            const health = inv.ai_health_score || 0;
+
+            // Aggregate Totals
             totalInvested += invested;
             totalCurrentValue += current;
 
-            // Metrics per asset
-            const moic = invested > 0 ? (current / invested).toFixed(2) + 'x' : '0.00x';
-            const trend: 'up' | 'down' | 'flat' = current > invested ? 'up' : current < invested ? 'down' : 'flat';
+            if (inv.status === 'active' || inv.status === 'monitoring') {
+                activeCount++;
+                if (health > 0) totalHealthScore += health;
+            }
 
             // Allocations
-            const sector = inv.company?.industry || 'Unknown';
+            const sector = inv.company?.sector || 'Unknown';
             sectorAllocation[sector] = (sectorAllocation[sector] || 0) + invested;
 
-            const stage = inv.company?.stage || 'Unknown';
+            const stage = inv.company?.funding_stage || 'Unknown';
             stageAllocation[stage] = (stageAllocation[stage] || 0) + invested;
 
             return {
@@ -54,51 +62,53 @@ export async function GET() {
                 company_id: inv.company_id,
                 company: inv.company,
 
-                // Fields required by Investment interface (DB matching)
                 amount_invested: invested,
                 current_value: current,
-                share_class: inv.share_class,
-                investment_date: inv.investment_date,
+                round_type: inv.round_type,
+                invested_date: inv.invested_date,
+                ownership_percentage: inv.ownership_percentage,
 
-                // Computed / View fields
+                status: inv.status || 'active',
+                ai_health_score: health,
+
+                // Computed
                 moic,
                 trend,
 
-                // Legacy / UI Helpers (Optional in type or intersection)
-                // We'll cast to any or ideally expand the type if needed, but for now let's satisfy the interface
+                // Compatibility / UI Helpers
                 investmentId: inv.id,
-                name: inv.company?.name || 'Unknown Company',
+                name: inv.company?.name || 'Unknown',
                 logo: inv.company?.logo_url,
-                investedDate: new Date(inv.investment_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+                investedDate: new Date(inv.invested_date).toLocaleDateString(),
                 amount: `$${(invested / 1000).toFixed(0)}k`,
-                shareClass: inv.share_class, // CamelCase alias for UI
-                ownership: inv.ownership_percentage ? `${(inv.ownership_percentage * 100).toFixed(2)}%` : '-',
-                currentValue: `$${(current / 1000).toFixed(0)}k`, // String format for UI
-            } as Investment & { [key: string]: any }; // Allow extra UI props
+                currentValueDisplay: `$${(current / 1000).toFixed(0)}k`
+            } as any;
         });
 
         // 3. Overall Metrics
         const overallMOIC = totalInvested > 0 ? (totalCurrentValue / totalInvested).toFixed(2) + 'x' : '0.00x';
-
-        // Simple IRR approx (real IRR requires cashstream array, out of scope for MVP)
-        // We'll use a placeholder or simple gain % for now
         const gainPercent = totalInvested > 0 ? ((totalCurrentValue - totalInvested) / totalInvested * 100).toFixed(1) + '%' : '0%';
+        const avgHealth = activeCount > 0 ? Math.round(totalHealthScore / activeCount) : 0;
 
         // Format Allocations for Charts
         const formatAllocation = (alloc: Record<string, number>) =>
             Object.entries(alloc).map(([name, value], i) => ({
                 name,
-                value: Math.round(value), // Keep raw value for chart sizing
+                value: Math.round(value),
                 color: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'][i % 5]
-            })).sort((a, b) => b.value - a.value); // descending
+            })).sort((a, b) => b.value - a.value);
+
+        const stats: MetricsState = {
+            totalInvested: `$${(totalInvested / 1000000).toFixed(2)}M`,
+            currentValue: `$${(totalCurrentValue / 1000000).toFixed(2)}M`,
+            moic: overallMOIC,
+            netIrr: gainPercent,
+            healthScore: avgHealth,
+            activeCompanies: activeCount
+        };
 
         return NextResponse.json({
-            stats: {
-                totalInvested: `$${(totalInvested / 1000000).toFixed(2)}M`,
-                currentValue: `$${(totalCurrentValue / 1000000).toFixed(2)}M`,
-                moic: overallMOIC,
-                irr: gainPercent // Labeling as IRR/Gain
-            },
+            stats,
             sectors: formatAllocation(sectorAllocation),
             stages: formatAllocation(stageAllocation),
             investments: portfolioItems
