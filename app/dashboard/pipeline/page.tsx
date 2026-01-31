@@ -35,7 +35,9 @@ function PipelineContent() {
     const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+
     const [creatingDealStage, setCreatingDealStage] = useState<string>('inbox');
+    const [prefillCompany, setPrefillCompany] = useState<{ id: string | null, name: string | null }>({ id: null, name: null });
 
     // Filters & Search
     const [searchQuery, setSearchQuery] = useState('');
@@ -72,6 +74,13 @@ function PipelineContent() {
 
     useEffect(() => {
         if (searchParams.get('action') === 'new') {
+            const companyId = searchParams.get('companyId');
+            const companyName = searchParams.get('companyName');
+
+            if (companyId || companyName) {
+                setPrefillCompany({ id: companyId, name: companyName });
+            }
+
             setCreatingDealStage('inbox');
             setIsCreateModalOpen(true);
         }
@@ -301,7 +310,7 @@ function PipelineContent() {
                             className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors ${filters[field] === '' ? 'text-emerald-600 font-semibold bg-slate-50' : 'text-slate-600'}`}
                             onClick={() => { setFilters(prev => ({ ...prev, [field]: '' })); setOpenFilterDropdown(null); }}
                         >
-                            All {label}s
+                            All {label === 'Priority' ? 'Priorities' : `${label}s`}
                         </button>
                         {options.map(opt => (
                             <button
@@ -323,117 +332,115 @@ function PipelineContent() {
     }
 
     return (
-        <div className="h-[calc(100vh-64px)] flex flex-col relative bg-[var(--color-bg-primary)]">
-            {/* Header */}
-            <div className="px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--color-border)] bg-white/50 backdrop-blur-sm z-30">
-                {/* Left: Enhanced Encapsulated Filters */}
-                <div className="bg-white border border-slate-200 p-1.5 rounded-2xl flex items-center shadow-sm">
-                    <button
-                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200/60 text-slate-700 font-semibold rounded-xl text-sm hover:bg-slate-100 transition-all active:scale-95"
-                        onClick={() => {
-                            setFilters({ sector: '', priority: '', verification: '', value: '' });
-                            setOpenFilterDropdown(null);
-                        }}
-                    >
-                        <Filter size={16} className="text-slate-500" /> Filters
-                    </button>
-                    <div className="h-5 w-px bg-slate-200 mx-2"></div>
-                    <div className="flex items-center gap-1">
-                        <FilterDropdown label="Sector" field="sector" options={['Fintech', 'Healthtech', 'Logistics', 'AgriTech', 'CleanTech', 'EdTech', 'Ecommerce']} />
-                        <FilterDropdown label="Priority" field="priority" options={['High', 'Medium', 'Low']} />
-                        <FilterDropdown label="Verification" field="verification" options={['Verified', 'Tier 5', 'Tier 4', 'Tier 3', 'Tier 2', 'Tier 1']} />
-                        <FilterDropdown label="Value" field="value" options={['High', 'Low']} />
-                    </div>
+        <div className="h-screen flex flex-col relative bg-slate-50/50 overflow-hidden">
+            {/* Glass Canopy Header Section - Fixed Height */}
+            <div className="relative border-b border-indigo-100/50 bg-white/40 backdrop-blur-xl z-[60] shrink-0">
+                {/* Abstract Background Blobs */}
+                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-50/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-60"></div>
                 </div>
 
-                {/* Right: Two-Box Search & Action */}
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 group">
-                        {/* Box 1: Icon */}
-                        <div className="w-11 h-11 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-400 group-focus-within:border-emerald-500 group-focus-within:text-emerald-500 shadow-sm transition-all duration-300">
-                            <Search size={20} />
+                <div className="px-6 py-5 relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    {/* Left: Title & Filters */}
+                    <div className="flex items-center gap-6">
+                        <div>
+                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-sans">Pipeline</h1>
                         </div>
-                        {/* Box 2: Input */}
-                        <input
-                            type="text"
-                            placeholder="Search deals..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="h-11 w-48 md:w-64 bg-white border border-slate-200 rounded-xl px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 shadow-sm transition-all"
-                        />
+
+                        <div className="h-8 w-px bg-slate-200/60 hidden md:block"></div>
+
+                        {/* Enhanced Encapsulated Filters */}
+                        <div className="bg-white/60 border border-slate-200/60 p-1 rounded-xl flex items-center shadow-sm backdrop-blur-md">
+                            <button
+                                className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200/60 text-slate-700 font-semibold rounded-lg text-xs hover:bg-slate-100 transition-all active:scale-95 uppercase tracking-wide"
+                                onClick={() => {
+                                    setFilters({ sector: '', priority: '', verification: '', value: '' });
+                                    setOpenFilterDropdown(null);
+                                }}
+                            >
+                                <Filter size={14} className="text-slate-500" /> Filters
+                            </button>
+                            <div className="h-4 w-px bg-slate-200 mx-2"></div>
+                            <div className="flex items-center gap-1">
+                                <FilterDropdown label="Sector" field="sector" options={['Fintech', 'Healthtech', 'Logistics', 'AgriTech', 'CleanTech', 'EdTech', 'Ecommerce']} />
+                                <FilterDropdown label="Priority" field="priority" options={['High', 'Medium', 'Low']} />
+                                <FilterDropdown label="Tier" field="verification" options={['Verified', 'Tier 5', 'Tier 4', 'Tier 3', 'Tier 2', 'Tier 1']} />
+                                <FilterDropdown label="Value" field="value" options={['High', 'Low']} />
+                            </div>
+                        </div>
                     </div>
-                    <button
-                        onClick={() => handleAddDeal('inbox')}
-                        className="h-11 flex items-center gap-2 px-6 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl shadow-lg shadow-slate-900/10 transition-all hover:scale-105 active:scale-95"
-                    >
-                        <Plus size={18} />
-                        New Deal
-                    </button>
+
+                    {/* Right: Search & Action */}
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <div className="w-10 h-10 flex items-center justify-center bg-white/60 border border-slate-200/60 rounded-xl text-slate-500 shadow-sm backdrop-blur-md">
+                                <Search size={18} />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search companies or deals..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="h-10 w-48 md:w-64 bg-white/60 border border-slate-200/60 rounded-xl px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 shadow-sm transition-all backdrop-blur-md"
+                            />
+                        </div>
+                        <button
+                            onClick={() => handleAddDeal('inbox')}
+                            className="h-10 flex items-center gap-2 px-5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wide rounded-xl shadow-lg shadow-slate-900/10 transition-all hover:scale-105 active:scale-95"
+                        >
+                            <Plus size={16} />
+                            New Deal
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* Kanban Board */}
-            <DragDropContext onDragEnd={onDragEnd}>
-                <div ref={scrollContainerRef} className="flex-1 overflow-x-auto overflow-y-hidden p-6 no-scrollbar scroll-smooth bg-[var(--color-bg-secondary)]/30">
-                    <div className="flex gap-6 h-full min-w-max">
-                        {data.columnOrder.map((columnId) => {
-                            const column = data.columns[columnId as keyof typeof data.columns];
-                            const filteredDeals = getFilteredDeals(column.dealIds);
+            {/* Kanban Board Area */}
+            <div className="flex-1 overflow-hidden relative">
+                {/* Premium Grid Background */}
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
 
-                            return (
-                                <PipelineColumn
-                                    key={column.id}
-                                    column={{ ...column, deals: filteredDeals }}
-                                    onDealClick={(deal) => setSelectedDealId(deal.id)}
-                                    onAddDeal={handleAddDeal}
-                                    onDeleteAll={handleDeleteAllDeals}
-                                />
-                            );
-                        })}
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <div ref={scrollContainerRef} className="h-full overflow-x-auto overflow-y-hidden p-6 no-scrollbar scroll-smooth flex items-start">
+                        <div className="flex gap-6 h-full min-w-max pb-4">
+                            {data.columnOrder.map((columnId) => {
+                                const column = data.columns[columnId as keyof typeof data.columns];
+                                const filteredDeals = getFilteredDeals(column.dealIds);
+
+                                return (
+                                    <PipelineColumn
+                                        key={column.id}
+                                        column={{ ...column, deals: filteredDeals }}
+                                        onDealClick={(deal) => setSelectedDealId(deal.id)}
+                                        onAddDeal={handleAddDeal}
+                                        onDeleteAll={handleDeleteAllDeals}
+                                    />
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
-            </DragDropContext>
+                </DragDropContext>
 
-            {/* Deal Detail Modal */}
-            <DealModal
-                deal={selectedDeal}
-                isOpen={!!selectedDeal}
-                onClose={() => setSelectedDealId(null)}
-                onDealUpdate={fetchDeals}
-            />
-
-            {/* Create Deal Modal */}
-            <CreateDealModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                onSuccess={() => {
-                    fetchDeals();
-                }}
-                defaultStage={creatingDealStage}
-            />
-
-
-
-
-            {/* Premium Scroll Controls - Separate Buttons */}
-            <button
-                onClick={scrollLeft}
-                className="hidden md:flex absolute bottom-6 left-6 w-14 h-14 bg-white/90 backdrop-blur-xl border border-slate-200/50 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] items-center justify-center text-slate-700 hover:bg-slate-900 hover:text-white hover:scale-110 hover:-translate-y-1 active:scale-95 active:translate-y-0 transition-all duration-300 group z-40"
-                aria-label="Scroll Left"
-            >
-                <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform duration-300" />
-            </button>
-            <button
-                onClick={scrollRight}
-                className="hidden md:flex absolute bottom-6 right-6 w-14 h-14 bg-white/90 backdrop-blur-xl border border-slate-200/50 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] items-center justify-center text-slate-700 hover:bg-slate-900 hover:text-white hover:scale-110 hover:-translate-y-1 active:scale-95 active:translate-y-0 transition-all duration-300 group z-40"
-                aria-label="Scroll Right"
-            >
-                <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform duration-300" />
-            </button>
+                {/* Vertical Center Scroll Controls */}
+                <button
+                    onClick={scrollLeft}
+                    className="hidden md:flex absolute top-1/2 left-6 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-xl border border-slate-200/50 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] items-center justify-center text-slate-500 hover:bg-slate-900 hover:text-white hover:scale-110 active:scale-95 transition-all duration-300 group z-40"
+                    aria-label="Scroll Left"
+                >
+                    <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform duration-300" />
+                </button>
+                <button
+                    onClick={scrollRight}
+                    className="hidden md:flex absolute top-1/2 right-6 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-xl border border-slate-200/50 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] items-center justify-center text-slate-500 hover:bg-slate-900 hover:text-white hover:scale-110 active:scale-95 transition-all duration-300 group z-40"
+                    aria-label="Scroll Right"
+                >
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform duration-300" />
+                </button>
+            </div>
 
             {/* Custom Delete All Confirmation Overlay */}
             {deleteStageId && (
-                <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/20 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                <div className="absolute inset-0 z-[60] flex items-center justify-center bg-slate-900/20 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center scale-100 animate-in zoom-in-95 duration-200 border border-slate-100">
                         <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 mx-auto shadow-sm ring-4 ring-red-50/50">
                             <AlertTriangle size={32} />
@@ -445,13 +452,13 @@ function PipelineContent() {
                         <div className="flex gap-3 w-full">
                             <button
                                 onClick={() => setDeleteStageId(null)}
-                                className="flex-1 py-3 px-4 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                                className="flex-1 py-3 px-4 text-xs font-bold uppercase tracking-wide text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={confirmDeleteAll}
-                                className="flex-1 py-3 px-4 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-600/20 transition-all hover:scale-105 active:scale-95"
+                                className="flex-1 py-3 px-4 text-xs font-bold uppercase tracking-wide text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-600/20 transition-all hover:scale-105 active:scale-95"
                             >
                                 Delete All
                             </button>
@@ -459,6 +466,25 @@ function PipelineContent() {
                     </div>
                 </div>
             )}
+            {/* Modals */}
+            <CreateDealModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                onSuccess={() => {
+                    fetchDeals();
+                    setIsCreateModalOpen(false);
+                }}
+                defaultStage={creatingDealStage}
+                defaultCompanyId={prefillCompany.id}
+                defaultCompanyName={prefillCompany.name}
+            />
+
+            <DealModal
+                deal={selectedDeal}
+                isOpen={!!selectedDeal}
+                onClose={() => setSelectedDealId(null)}
+                onDealUpdate={fetchDeals}
+            />
         </div>
     );
 }

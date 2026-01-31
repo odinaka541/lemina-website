@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, DollarSign, Activity, FileText, CheckSquare, Clock, ArrowRight, ExternalLink, MessageSquare, Phone, Mail, MoreHorizontal, Timer, Trash2, Share2, Edit, Save, AlertCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { Deal } from '@/types';
+import { createPortal } from 'react-dom';
 
 interface DealModalProps {
     deal: Deal | null;
@@ -15,6 +16,8 @@ interface DealModalProps {
 
 export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealModalProps) {
     const { showToast } = useToast();
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
     const [notes, setNotes] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
@@ -178,7 +181,9 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
         return `$${amount}`;
     };
 
-    return (
+    if (!mounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <>
@@ -188,7 +193,7 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
                     >
                         {/* Modal */}
                         <motion.div
@@ -485,6 +490,7 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
                     </motion.div>
                 </>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }

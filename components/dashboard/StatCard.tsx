@@ -46,16 +46,19 @@ export default function StatCard({
 
     if (variant === 'compact') {
         return (
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group h-full flex flex-col justify-between">
-                <div className="flex items-start gap-4">
-                    <div className={`p-2.5 rounded-xl ${colorClasses[color]} bg-opacity-50 shrink-0`}>
-                        <Icon size={20} />
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group h-full flex flex-col justify-between cursor-default">
+                {/* Decorative background element */}
+                <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full ${colorClasses[color]} opacity-20 blur-2xl group-hover:scale-150 transition-transform duration-700`}></div>
+
+                <div className="flex items-start gap-5 relative z-10">
+                    <div className={`p-3 rounded-xl ${colorClasses[color]} bg-opacity-50 shrink-0 shadow-sm group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon size={22} strokeWidth={2} />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">{label}</p>
-                        <h3 className="text-xl font-bold text-slate-900 leading-tight">{value}</h3>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1.5">{label}</p>
+                        <h3 className="text-2xl font-bold text-slate-900 leading-tight font-mono tracking-tight">{value}</h3>
                         {subtext && (
-                            <p className="text-[10px] text-slate-400 font-medium leading-snug mt-1 truncate">
+                            <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-1.5 truncate group-hover:text-slate-700 transition-colors">
                                 {subtext}
                             </p>
                         )}
@@ -64,13 +67,13 @@ export default function StatCard({
 
                 {/* Footer Action area for Compact Card */}
                 {actionLink && (
-                    <div className="mt-3 pt-3 border-t border-slate-50 flex justify-end">
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end relative z-10">
                         <Link
                             href={actionLink}
-                            className="flex items-center text-[10px] font-bold text-slate-500 hover:text-indigo-600 transition-colors uppercase tracking-wide group/link"
+                            className="flex items-center text-[10px] font-bold text-slate-400 hover:text-indigo-600 transition-all uppercase tracking-widest group/link"
                         >
                             {actionLabel}
-                            <ArrowRight size={12} className="ml-1 transition-transform group-hover/link:translate-x-1" />
+                            <ArrowRight size={12} className="ml-1.5 transition-transform group-hover/link:translate-x-1" />
                         </Link>
                     </div>
                 )}

@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import {
     X, Search, DollarSign, Calendar, Upload, FileText,
     AlertCircle, Plus, Loader2, Building2, Globe, Percent,
-    Lightbulb, Zap, Info
+    Lightbulb, Zap, Info, ArrowRight, CheckCircle2
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { createClient } from '@/lib/supabase/client';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AddInvestmentModalProps {
     isOpen: boolean;
@@ -43,6 +44,7 @@ export default function AddInvestmentModal({ isOpen, onClose, onSuccess }: AddIn
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [userId, setUserId] = useState<string | null>(null);
+    const [currentStep, setCurrentStep] = useState(1);
 
     const supabase = createClient();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +59,7 @@ export default function AddInvestmentModal({ isOpen, onClose, onSuccess }: AddIn
             setErrors({});
             setTouched({});
             setIsNewCompany(false);
+            setCurrentStep(1);
         }
     }, [isOpen]);
 
@@ -106,23 +109,17 @@ export default function AddInvestmentModal({ isOpen, onClose, onSuccess }: AddIn
         // Amount validation
         const amount = parseFloat(formData.amount);
         if (!formData.amount || isNaN(amount) || amount <= 0) {
-            newErrors.amount = 'Investment amount must be greater than $0';
+            newErrors.amount = 'Amount > $0';
         }
 
         // Date validation
         if (!formData.investment_date) {
-            newErrors.investment_date = 'Investment date is required';
-        } else {
-            const date = new Date(formData.investment_date);
-            const today = new Date();
-            if (date > today) {
-                newErrors.investment_date = 'Investment date cannot be in the future';
-            }
+            newErrors.investment_date = 'Required';
         }
 
         // Round type validation
         if (!formData.round_type) {
-            newErrors.round_type = 'Round type is required';
+            newErrors.round_type = 'Required';
         }
 
         setErrors(newErrors);
@@ -166,7 +163,6 @@ export default function AddInvestmentModal({ isOpen, onClose, onSuccess }: AddIn
 
                 if (companyError) throw companyError;
                 companyId = companyData.id;
-                showToast(`Created company: ${formData.new_company_name}`, 'success');
             }
 
             // Step 2: Create investment
@@ -193,8 +189,6 @@ export default function AddInvestmentModal({ isOpen, onClose, onSuccess }: AddIn
 
             // Step 3: Upload documents if any
             if (uploadedFiles.length > 0) {
-                showToast(`Uploading ${uploadedFiles.length} document(s)...`, 'info');
-
                 for (const file of uploadedFiles) {
                     const filePath = `portfolio/${investmentData.id}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
 
@@ -235,11 +229,10 @@ export default function AddInvestmentModal({ isOpen, onClose, onSuccess }: AddIn
                         body: JSON.stringify({ documentId: docData.id })
                     }).catch(err => console.error("AI trigger failed", err));
                 }
-
-                showToast('Documents uploaded & analysis started', 'success');
-            } else {
-                showToast('Investment added successfully!', 'success');
             }
+
+            // Success feedback
+            showToast('Investment added successfully!', 'success');
 
             // Reset form
             setFormData(INITIAL_FORM_STATE);
@@ -258,12 +251,10 @@ export default function AddInvestmentModal({ isOpen, onClose, onSuccess }: AddIn
         }
     }
 
-    // Components helpers
     function FieldError({ field }: { field: string }) {
         if (!touched[field] || !errors[field]) return null;
-
         return (
-            <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+            <p className="text-[10px] font-bold text-red-500 uppercase tracking-wide mt-1 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
                 {errors[field]}
             </p>
@@ -273,558 +264,310 @@ export default function AddInvestmentModal({ isOpen, onClose, onSuccess }: AddIn
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto flex flex-col">
-                {/* Header */}
-                <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white shadow-sm">
-                    <div className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-emerald-600" />
-                        <h2 className="text-xl font-semibold text-gray-900">
-                            Add New Investment
-                        </h2>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors bg-gray-50 hover:bg-gray-100 p-2 rounded-full"
-                    >
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
-
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-8 flex-1 overflow-y-auto">
-
-                    {/* SECTION 1: INVESTMENT DETAILS */}
-                    <div className="space-y-4">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">1</span>
-                            Investment Details
-                        </h3>
-
-                        {/* Company Selection */}
-                        {!isNewCompany ? (
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Company *
-                                </label>
-
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-
-                                    <select
-                                        value={formData.company_id}
-                                        onChange={(e) => {
-                                            if (e.target.value === 'create_new') {
-                                                setIsNewCompany(true);
-                                                setFormData(prev => ({ ...prev, company_id: '' }));
-                                            } else {
-                                                setFormData(prev => ({ ...prev, company_id: e.target.value }));
-                                            }
-                                        }}
-                                        className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none appearance-none bg-white"
-                                    >
-                                        <option value="">Select a company...</option>
-                                        {companies.map(company => (
-                                            <option key={company.id} value={company.id}>
-                                                {company.name} {company.sector ? `• ${company.sector}` : ''}
-                                            </option>
-                                        ))}
-                                        <option value="create_new" className="font-semibold text-emerald-600 bg-emerald-50">
-                                            + Add New Company
-                                        </option>
-                                    </select>
-                                </div>
-                                <FieldError field="company" />
-                            </div>
-                        ) : (
-                            // New company form (expanded)
-                            <div className="space-y-4 p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg border border-emerald-200 animate-in fade-in zoom-in-95">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <Building2 className="h-4 w-4 text-emerald-600" />
-                                        <span className="text-sm font-medium text-gray-900">
-                                            Adding New Company
-                                        </span>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setIsNewCompany(false);
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                new_company_name: '',
-                                                new_company_website: '',
-                                                new_company_country: '',
-                                                new_company_sector: ''
-                                            }));
-                                        }}
-                                        className="text-xs text-gray-600 hover:text-gray-800 underline"
-                                    >
-                                        Select existing instead
-                                    </button>
-                                </div>
-
-                                {/* Company Name */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Company Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.new_company_name}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            new_company_name: e.target.value
-                                        })}
-                                        onBlur={() => setTouched({ ...touched, new_company_name: true })}
-                                        placeholder="e.g., Cape Verde Fintech"
-                                        className="w-full px-3 py-2 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                                        required
-                                    />
-                                    <FieldError field="new_company_name" />
-                                </div>
-
-                                {/* Website */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Website (optional)
-                                    </label>
-                                    <div className="relative">
-                                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        <input
-                                            type="url"
-                                            value={formData.new_company_website}
-                                            onChange={(e) => setFormData({
-                                                ...formData,
-                                                new_company_website: e.target.value
-                                            })}
-                                            placeholder="https://..."
-                                            className="w-full pl-10 pr-3 py-2 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Country & Sector */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Country *
-                                        </label>
-                                        <select
-                                            value={formData.new_company_country}
-                                            onChange={(e) => setFormData({
-                                                ...formData,
-                                                new_company_country: e.target.value
-                                            })}
-                                            className="w-full px-3 py-2 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                                            required
-                                        >
-                                            <option value="">Select...</option>
-                                            <option value="NG">🇳🇬 Nigeria</option>
-                                            <option value="KE">🇰🇪 Kenya</option>
-                                            <option value="ZA">🇿🇦 South Africa</option>
-                                            <option value="CV">🇨🇻 Cape Verde</option>
-                                            <option value="MZ">🇲🇿 Mozambique</option>
-                                            <option value="AO">🇦🇴 Angola</option>
-                                            <option value="GH">🇬🇭 Ghana</option>
-                                            <option value="EG">🇪🇬 Egypt</option>
-                                        </select>
-                                        <FieldError field="new_company_country" />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Sector *
-                                        </label>
-                                        <select
-                                            value={formData.new_company_sector}
-                                            onChange={(e) => setFormData({
-                                                ...formData,
-                                                new_company_sector: e.target.value
-                                            })}
-                                            className="w-full px-3 py-2 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                                            required
-                                        >
-                                            <option value="">Select...</option>
-                                            <option value="Fintech">Fintech</option>
-                                            <option value="Healthtech">Healthtech</option>
-                                            <option value="Logistics">Logistics</option>
-                                            <option value="Edtech">Edtech</option>
-                                            <option value="Agritech">Agritech</option>
-                                            <option value="Ecommerce">E-commerce</option>
-                                            <option value="Cleantech">Cleantech</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                        <FieldError field="new_company_sector" />
-                                    </div>
-                                </div>
-
-                                <p className="text-xs text-gray-600 flex items-start gap-1.5">
-                                    <AlertCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-                                    <span>We'll create a basic profile. You can add more details later.</span>
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Amount & Date */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Amount Invested *
-                                </label>
-                                <div className="relative">
-                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                    <input
-                                        type="number"
-                                        value={formData.amount}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            amount: e.target.value
-                                        })}
-                                        onBlur={() => setTouched({ ...touched, amount: true })}
-                                        placeholder="50000"
-                                        min="0"
-                                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                                    />
-                                </div>
-                                <FieldError field="amount" />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Investment Date *
-                                </label>
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                    <input
-                                        type="date"
-                                        value={formData.investment_date || new Date().toISOString().split('T')[0]}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            investment_date: e.target.value
-                                        })}
-                                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                                        required
-                                    />
-                                </div>
-                                <FieldError field="investment_date" />
-                            </div>
-                        </div>
-
-                        {/* Financials: Round, Valuation, Ownership */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {/* Round Type */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Round Type *
-                                </label>
-                                <select
-                                    value={formData.round_type}
-                                    onChange={(e) => setFormData({ ...formData, round_type: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                                >
-                                    <option value="SAFE">SAFE</option>
-                                    <option value="Convertible Note">Convertible Note</option>
-                                    <option value="Seed">Seed (Equity)</option>
-                                    <option value="Series A">Series A</option>
-                                    <option value="Series B+">Series B+</option>
-                                    <option value="Secondary">Secondary</option>
-                                    <option value="Token">Token/SAFT</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-
-                            {/* Valuation (Post-Money) */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Valuation (Post)
-                                </label>
-                                <div className="relative">
-                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                    <input
-                                        type="number"
-                                        value={formData.valuation_post_money}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            const newVal = value ? parseFloat(value) : '';
-                                            const newState = { ...formData, valuation_post_money: value };
-
-                                            // Auto-calculate ownership
-                                            if (formData.amount && newVal) {
-                                                const amountVal = parseFloat(formData.amount);
-                                                const valuationVal = newVal as number;
-                                                const ownership = (amountVal / valuationVal) * 100;
-                                                newState.ownership_percentage = ownership.toFixed(3);
-                                            }
-
-                                            setFormData(newState);
-                                        }}
-                                        placeholder="5000000"
-                                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                                        min="0"
-                                    />
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">Post-money valuation</p>
-                            </div>
-
-                            {/* Ownership % */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Ownership %
-                                </label>
-                                <div className="relative">
-                                    <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                    <input
-                                        type="number"
-                                        value={formData.ownership_percentage}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            ownership_percentage: e.target.value
-                                        })}
-                                        placeholder="0.5"
-                                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                                        step="0.001"
-                                        min="0"
-                                        max="100"
-                                    />
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">Your stake (auto-calc)</p>
-                            </div>
-                        </div>
-
-                        {/* Helper for calculation */}
-                        {formData.amount && formData.valuation_post_money && (
-                            <div className="p-2 bg-blue-50 rounded text-xs text-blue-700 flex items-center gap-2">
-                                <Lightbulb size={12} className="shrink-0" />
-                                With ${(parseFloat(formData.amount) / 1000).toFixed(0)}k investment at ${(parseFloat(formData.valuation_post_money) / 1000000).toFixed(1)}M valuation, you own ~{((parseFloat(formData.amount) / parseFloat(formData.valuation_post_money)) * 100).toFixed(2)}%
-                            </div>
-                        )}
-                    </div>
-
-                    {/* SECTION 2: CONTEXT & THESIS */}
-                    <div className="space-y-4">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">2</span>
-                            Context & Thesis
-                        </h3>
-
-                        <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                            <Lightbulb className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <p className="text-xs text-blue-700">
-                                AI uses your thesis to assess if the company is meeting YOUR expectations.
-                                The more context you provide, the better AI can analyze future updates.
-                            </p>
-                        </div>
-
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+                onClick={onClose}
+            >
+                <motion.div
+                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                >
+                    {/* Header */}
+                    <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                What attracted you to this company?
-                            </label>
-                            <textarea
-                                value={formData.thesis_attracted}
-                                onChange={(e) => setFormData({
-                                    ...formData,
-                                    thesis_attracted: e.target.value
-                                })}
-                                placeholder="Strong founding team, solving payments for SMEs..."
-                                rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 resize-none focus:outline-none"
-                                maxLength={500}
-                            />
+                            <h2 className="text-xl font-bold text-slate-900 tracking-tight font-sans">
+                                Add New Investment
+                            </h2>
+                            <p className="text-sm text-slate-500 font-medium">Capture deal details & documents</p>
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                What metrics mattered at investment?
-                            </label>
-                            <textarea
-                                value={formData.thesis_metrics}
-                                onChange={(e) => setFormData({
-                                    ...formData,
-                                    thesis_metrics: e.target.value
-                                })}
-                                placeholder="$500k ARR, 20% MoM growth..."
-                                rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 resize-none focus:outline-none"
-                                maxLength={500}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                What needs to happen for 10x success?
-                            </label>
-                            <textarea
-                                value={formData.thesis_success}
-                                onChange={(e) => setFormData({
-                                    ...formData,
-                                    thesis_success: e.target.value
-                                })}
-                                placeholder="Expand to Kenya, hit $5M ARR..."
-                                rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 resize-none focus:outline-none"
-                                maxLength={500}
-                            />
-                        </div>
-                    </div>
-
-                    {/* SECTION 3: INITIAL DOCUMENTS */}
-                    <div className="space-y-4">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">3</span>
-                            Initial Documents
-                        </h3>
-
-                        <div className="flex items-start gap-2 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                            <Zap className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-                            <div className="flex-1">
-                                <p className="text-sm font-medium text-emerald-900 mb-1">
-                                    Recommended: Upload baseline documents
-                                </p>
-                                <p className="text-xs text-emerald-700">
-                                    Upload documents from time of investment (SAFE, pitch deck). AI compares future updates against this baseline.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div
-                            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-emerald-400 hover:bg-emerald-50/30 transition-all cursor-pointer group bg-slate-50 relative"
-                            onClick={() => fileInputRef.current?.click()}
-                            onDragOver={(e) => {
-                                e.preventDefault();
-                                e.currentTarget.classList.add('border-emerald-500', 'bg-emerald-50');
-                            }}
-                            onDragLeave={(e) => {
-                                e.currentTarget.classList.remove('border-emerald-500', 'bg-emerald-50');
-                            }}
-                            onDrop={(e) => {
-                                e.preventDefault();
-                                e.currentTarget.classList.remove('border-emerald-500', 'bg-emerald-50');
-                                const files = Array.from(e.dataTransfer.files);
-                                const validFiles = files.filter(f =>
-                                    ['application/pdf'].includes(f.type) &&
-                                    f.size <= 10 * 1024 * 1024
-                                );
-                                if (validFiles.length < files.length) {
-                                    showToast('Only PDF files under 10MB are supported for now', 'error');
-                                }
-                                setUploadedFiles(prev => [...prev, ...validFiles]);
-                            }}
+                        <button
+                            onClick={onClose}
+                            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
                         >
-                            <Upload className="h-10 w-10 text-gray-400 group-hover:text-emerald-500 mx-auto mb-3 transition-colors" />
-                            <p className="text-sm text-gray-600 mb-1">
-                                <span className="text-emerald-600 font-semibold group-hover:text-emerald-700">
-                                    Click to upload
-                                </span>
-                                {' '}or drag and drop
-                            </p>
-                            <p className="text-xs text-gray-500 mb-2">
-                                PDF up to 10MB each
-                            </p>
-                            <p className="text-xs text-gray-400">
-                                ⚡ AI will analyze in ~10-15 seconds
-                            </p>
+                            <X size={20} />
+                        </button>
+                    </div>
 
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                multiple
-                                accept=".pdf"
-                                onChange={(e) => {
-                                    const files = Array.from(e.target.files || []);
-                                    const validFiles = files.filter(f =>
-                                        ['application/pdf'].includes(f.type) &&
-                                        f.size <= 10 * 1024 * 1024
-                                    );
-                                    if (validFiles.length < files.length) {
-                                        showToast('Only PDF files under 10MB are supported for now', 'error');
-                                    }
-                                    setUploadedFiles(prev => [...prev, ...validFiles]);
-                                }}
-                                className="hidden"
-                            />
-                        </div>
+                    {/* Progress Steps (Optional visual flair) */}
+                    <div className="flex w-full h-1 bg-slate-100">
+                        <div className={`h-full bg-indigo-500 transition-all duration-300 ${currentStep === 1 ? 'w-1/3' : currentStep === 2 ? 'w-2/3' : 'w-full'}`} />
+                    </div>
 
-                        {/* Show uploaded files */}
-                        {uploadedFiles.length > 0 && (
-                            <div className="space-y-2">
-                                <p className="text-xs font-medium text-gray-700">
-                                    {uploadedFiles.length} document{uploadedFiles.length !== 1 ? 's' : ''} ready to download
-                                </p>
-                                {uploadedFiles.map((file, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors group"
-                                    >
-                                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                                            <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-sm text-gray-700 font-medium truncate">
-                                                    {file.name}
-                                                </p>
-                                                <p className="text-xs text-gray-500">
-                                                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                                                </p>
+                    {/* Scrollable Form Body */}
+                    <div className="flex-1 overflow-y-auto p-8 space-y-10">
+
+                        {/* SECTION 1: CORE DATA */}
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold border border-indigo-100 shadow-sm">
+                                    1
+                                </div>
+                                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">
+                                    Investment Details
+                                </h3>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-6">
+                                {/* Company Selector */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Company</label>
+                                    {!isNewCompany ? (
+                                        <div className="relative group">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                            <select
+                                                value={formData.company_id}
+                                                onChange={(e) => {
+                                                    if (e.target.value === 'create_new') {
+                                                        setIsNewCompany(true);
+                                                        setFormData(prev => ({ ...prev, company_id: '' }));
+                                                    } else {
+                                                        setFormData(prev => ({ ...prev, company_id: e.target.value }));
+                                                    }
+                                                }}
+                                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer hover:bg-slate-100/50"
+                                            >
+                                                <option value="">Select a portfolio company...</option>
+                                                {companies.map(c => (
+                                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                                ))}
+                                                <option value="create_new" className="font-bold text-indigo-600">+ Add New Company</option>
+                                            </select>
+                                            <FieldError field="company" />
+                                        </div>
+                                    ) : (
+                                        <div className="p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-4 animate-in fade-in slide-in-from-top-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-2">
+                                                    <Plus size={12} strokeWidth={3} /> New Company Profile
+                                                </span>
+                                                <button onClick={() => setIsNewCompany(false)} className="text-xs font-medium text-slate-500 hover:text-slate-800 underline">Cancel</button>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <input
+                                                    placeholder="Company Name"
+                                                    value={formData.new_company_name}
+                                                    onChange={e => setFormData({ ...formData, new_company_name: e.target.value })}
+                                                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
+                                                />
+                                                <input
+                                                    placeholder="Website (e.g. stripe.com)"
+                                                    value={formData.new_company_website}
+                                                    onChange={e => setFormData({ ...formData, new_company_website: e.target.value })}
+                                                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
+                                                />
+                                                <select
+                                                    value={formData.new_company_country}
+                                                    onChange={e => setFormData({ ...formData, new_company_country: e.target.value })}
+                                                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
+                                                >
+                                                    <option value="">Select Country...</option>
+                                                    <option value="NG">Nigeria</option>
+                                                    <option value="KE">Kenya</option>
+                                                    <option value="ZA">South Africa</option>
+                                                    <option value="US">United States</option>
+                                                    <option value="UK">United Kingdom</option>
+                                                </select>
+                                                <select
+                                                    value={formData.new_company_sector}
+                                                    onChange={e => setFormData({ ...formData, new_company_sector: e.target.value })}
+                                                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
+                                                >
+                                                    <option value="">Select Sector...</option>
+                                                    <option value="Fintech">Fintech</option>
+                                                    <option value="Healthtech">Healthtech</option>
+                                                    <option value="SaaS">SaaS</option>
+                                                    <option value="Ecommerce">Ecommerce</option>
+                                                </select>
                                             </div>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setUploadedFiles(uploadedFiles.filter((_, i) => i !== index))}
-                                            className="text-gray-400 hover:text-red-600 transition-colors p-1"
-                                            aria-label={`Remove ${file.name}`}
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Financials Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Invested ($)</label>
+                                        <div className="relative group">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors font-mono">$</span>
+                                            <input
+                                                type="number"
+                                                placeholder="50,000"
+                                                value={formData.amount}
+                                                onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                                                className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-mono"
+                                            />
+                                        </div>
                                     </div>
-                                ))}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Date</label>
+                                        <input
+                                            type="date"
+                                            value={formData.investment_date}
+                                            onChange={e => setFormData({ ...formData, investment_date: e.target.value })}
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Instrument</label>
+                                        <select
+                                            value={formData.round_type}
+                                            onChange={e => setFormData({ ...formData, round_type: e.target.value })}
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                                        >
+                                            <option value="SAFE">SAFE</option>
+                                            <option value="Equity">Equity</option>
+                                            <option value="Convertible">Convertible Note</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Valuation (Post-Money)</label>
+                                        <div className="relative group">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-600 transition-colors font-mono">$</span>
+                                            <input
+                                                type="number"
+                                                placeholder="10,000,000"
+                                                value={formData.valuation_post_money}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    const amount = parseFloat(formData.amount);
+                                                    const valuation = parseFloat(val);
+                                                    let ownership = '';
+                                                    if (amount && valuation) {
+                                                        ownership = ((amount / valuation) * 100).toFixed(4);
+                                                    }
+                                                    setFormData({ ...formData, valuation_post_money: val, ownership_percentage: ownership });
+                                                }}
+                                                className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-mono"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Ownership %</label>
+                                        <div className="relative group">
+                                            <input
+                                                type="number"
+                                                placeholder="0.5"
+                                                value={formData.ownership_percentage}
+                                                readOnly
+                                                className="w-full pl-4 pr-10 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 focus:outline-none cursor-not-allowed font-mono"
+                                            />
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
 
-                </form>
+                        <div className="h-px bg-slate-100 w-full" />
 
-                {/* Footer */}
-                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50 sticky bottom-0 z-10">
-                    <p className="text-xs text-gray-500 flex items-center gap-1.5 hidden md:flex">
-                        <Info className="h-3.5 w-3.5" />
-                        {uploadedFiles.length > 0
-                            ? `${uploadedFiles.length} document(s) will be analyzed`
-                            : 'You can add documents later'
-                        }
-                    </p>
+                        {/* SECTION 2: THESIS & DOCS */}
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold border border-emerald-100 shadow-sm">
+                                    2
+                                </div>
+                                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">
+                                    Thesis & Files
+                                </h3>
+                            </div>
 
-                    <div className="flex gap-3 w-full md:w-auto">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            disabled={isSubmitting}
-                            className="flex-1 md:flex-none px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Cancel
-                        </button>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Investment Thesis (Why now?)</label>
+                                <textarea
+                                    rows={3}
+                                    placeholder="e.g. Strong founder market fit, 20% MoM growth, massive TAM..."
+                                    value={formData.thesis_attracted}
+                                    onChange={e => setFormData({ ...formData, thesis_attracted: e.target.value })}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all resize-none"
+                                />
+                            </div>
 
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                            className="flex-1 md:flex-none px-5 py-2.5 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Creating...
-                                </>
-                            ) : (
-                                <>
-                                    <Plus className="h-4 w-4" />
-                                    Create Investment
-                                </>
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className="group border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:border-indigo-400 hover:bg-slate-50 transition-all cursor-pointer relative overflow-hidden"
+                            >
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    multiple
+                                    accept=".pdf"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        if (e.target.files) setUploadedFiles([...uploadedFiles, ...Array.from(e.target.files)]);
+                                    }}
+                                />
+                                <div className="relative z-10 flex flex-col items-center gap-2">
+                                    <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center border border-slate-100 group-hover:scale-110 transition-transform duration-300">
+                                        <Upload className="text-indigo-500" size={20} />
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-700">
+                                        Upload Investment Documents
+                                    </p>
+                                    <p className="text-xs text-slate-400 font-medium">
+                                        Drag & drop checks, agreements, reports (PDF)
+                                    </p>
+                                </div>
+                                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 to-white/0 group-hover:from-indigo-50/20 group-hover:to-purple-50/20 transition-all duration-500" />
+                            </div>
+
+                            {uploadedFiles.length > 0 && (
+                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                                    {uploadedFiles.map((f, i) => (
+                                        <div key={i} className="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                                    <FileText size={16} />
+                                                </div>
+                                                <span className="text-sm font-bold text-slate-700 truncate max-w-[200px]">{f.name}</span>
+                                            </div>
+                                            <button
+                                                onClick={() => setUploadedFiles(uploadedFiles.filter((_, idx) => i !== idx))}
+                                                className="text-slate-400 hover:text-red-500 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             )}
-                        </button>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
+
+                    {/* Footer Actions */}
+                    <div className="p-6 border-t border-slate-100 bg-slate-50/80 backdrop-blur-sm flex justify-between items-center">
+                        <div className="hidden md:flex items-center gap-2 text-xs font-medium text-slate-500">
+                            <Info size={14} className="text-indigo-500" />
+                            <span>AI will analyze uploaded files for quick insights.</span>
+                        </div>
+                        <div className="flex gap-3 ml-auto">
+                            <button
+                                onClick={onClose}
+                                className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 rounded-xl transition-all shadow-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="px-8 py-2.5 text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
+                                {isSubmitting ? 'Processing...' : 'Confirm Investment'}
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
     );
 }
-

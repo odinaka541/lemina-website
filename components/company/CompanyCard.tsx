@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Target, Star } from 'lucide-react';
+import { Target, Star, ArrowRight } from 'lucide-react';
 
 interface CompanyMetric {
     label: string;
@@ -143,8 +143,8 @@ export default function CompanyCard({
                             <Star size={12} />
                         </button>
 
-                        <Link href={`/dashboard/companies/${id}`} className="py-1.5 px-3 rounded-full border border-[var(--glass-border-color)] bg-[var(--input-bg)] hover:bg-[var(--glass-border-color)] text-[var(--color-text-primary)] text-[10px] font-bold uppercase tracking-wide transition-all duration-300 flex items-center gap-1 hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)]">
-                            View
+                        <Link href={`/dashboard/companies/${id}`} className="h-8 px-4 flex items-center justify-center rounded-full border border-[var(--glass-border-color)] bg-[var(--input-bg)] hover:bg-[var(--glass-border-color)] text-[var(--color-text-primary)] transition-all duration-300 hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)] group" title="View Details">
+                            <ArrowRight size={20} strokeWidth={3} className="transition-transform group-hover:translate-x-1" />
                         </Link>
                     </div>
                 </div>

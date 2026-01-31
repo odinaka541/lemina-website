@@ -1,301 +1,103 @@
-'use client';
+import { Newspaper, ExternalLink, Activity, Sparkles, Clock, ArrowUpRight } from 'lucide-react';
 
-import { useState } from 'react';
-import { ExternalLink, CalendarDays, Filter, Megaphone, TrendingUp, AlertTriangle, Shield, Users, Zap, Globe, Clock, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
-import VerifiedText from '../VerifiedText';
-
-// Types
-type EventType = 'Funding' | 'Regulatory' | 'Team' | 'Product' | 'Competitive' | 'Macro';
-type Impact = 'Positive' | 'Neutral' | 'Negative' | 'Watch';
-
-interface NewsItem {
-    id: number;
-    title: string;
-    source: string;
-    date: string;
-    type: EventType;
-    impact: Impact;
-    leminaTake: string; // The "What it means" analysis
-    summary: string;
-    url: string;
-    isMaterial?: boolean; // For the pinned banner
-}
-
-// Mock Data
-const NEWS_ITEMS: NewsItem[] = [
-    {
-        id: 1,
-        title: "Paystack launches Virtual Terminal for manual in-person payments",
-        source: "TechCabal",
-        date: "2 days ago",
-        type: "Product",
-        impact: "Positive",
-        leminaTake: "Expands TAM to offline/in-store retail merchants who don't have hardware POS.",
-        summary: "Paystack has introduced Virtual Terminal, a new feature allowing merchants to accept in-person payments using their phones and a simple web interface, bypassing the need for physical hardware terminals.",
-        url: "#",
-        isMaterial: true
-    },
-    {
-        id: 2,
-        title: "Central Bank of Kenya grants Payment Service Provider license to Paystack",
-        source: "Disrupt Africa",
-        date: "Nov 12, 2022",
-        type: "Regulatory",
-        impact: "Positive",
-        leminaTake: "Removes largest regulatory risk in East Africa hub; enables full-scale localized operations.",
-        summary: "Paystack has secured a Payment Service Provider license from the Central Bank of Kenya, enabling it to process payments for Kenyan businesses directly without third-party intermediaries.",
-        url: "#"
-    },
-    {
-        id: 3,
-        title: "Flutterwave announces IPO plans, signaling matured exit environment",
-        source: "Bloomberg",
-        date: "Oct 28, 2023",
-        type: "Competitive",
-        impact: "Neutral",
-        leminaTake: "Validates the sector but increases pressure on talent retention and competitive pricing.",
-        summary: "Rival payment processor Flutterwave is moving ahead with plans for an initial public offering, potentially listing on the NASDAQ as early as next year.",
-        url: "#"
-    },
-    {
-        id: 4,
-        title: "CBN introduces new operational guidelines for Payment Service Solutions",
-        source: "CBN Circular",
-        date: "Aug 15, 2023",
-        type: "Macro",
-        impact: "Watch",
-        leminaTake: "New capital requirements may squeeeze smaller competitors; Paystack is well-capitalized to comply.",
-        summary: "The Central Bank of Nigeria has released new guidelines increasing the minimum capital requirements for PSSPs and switching companies to strengthen the financial stability of the fintech sector.",
-        url: "#"
-    },
-    {
-        id: 5,
-        title: "Paystack expands direct debit to 3 new banks",
-        source: "Company Blog",
-        date: "Jul 10, 2023",
-        type: "Product",
-        impact: "Positive",
-        leminaTake: "Improves success rates for recurring billing merchants; reduces churn.",
-        summary: "Paystack has added support for direct debit mandates with Zenith, GTBank, and UBA, covering 60% of their merchant customer base.",
-        url: "#"
-    },
-    {
-        id: 6,
-        title: "Stripe acquires Paystack for $200M+",
-        source: "TechCrunch",
-        date: "Oct 15, 2020",
-        type: "Funding",
-        impact: "Positive",
-        leminaTake: "The definitive exit for African tech. Unlocks infinite runway and world-class infrastructure.",
-        summary: "Stripe has acquired Paystack in a deal reported to be over $200 million, marking the largest acquisition of a Nigerian startup to date.",
-        url: "#"
-    }
-];
-
-// Helper for impact colors
-const getImpactColor = (impact: Impact) => {
-    switch (impact) {
-        case 'Positive': return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
-        case 'Negative': return 'text-rose-500 bg-rose-500/10 border-rose-500/20';
-        case 'Watch': return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
-        default: return 'text-slate-500 bg-slate-500/10 border-slate-500/20';
-    }
-};
-
-const getTypeIcon = (type: EventType) => {
-    switch (type) {
-        case 'Funding': return <DollarIcon size={14} />;
-        case 'Regulatory': return <Shield size={14} />;
-        case 'Team': return <Users size={14} />;
-        case 'Product': return <Zap size={14} />;
-        case 'Competitive': return <TrendingUp size={14} />;
-        case 'Macro': return <Globe size={14} />;
-        default: return <Megaphone size={14} />;
-    }
-};
-
-// Custom Dollar Icon
-const DollarIcon = ({ size }: { size: number }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="2" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-);
-
-
-
-
-// ... other imports
-
-export default function NewsTab({ company }: { company?: any }) {
-    const [filter, setFilter] = useState<EventType | 'All'>('All');
-    const [expandedIds, setExpandedIds] = useState<number[]>([]);
-
-    const toggleExpand = (id: number) => {
-        setExpandedIds(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
-    };
-
-    // Use company news or fallback specifically for Paystack mock
-    let newsItems = company?.news;
-    if (!newsItems || newsItems.length === 0) {
-        if (company?.name === 'Paystack') {
-            newsItems = NEWS_ITEMS;
-        } else {
-            newsItems = [];
-        }
-    }
-
-    const filteredNews = filter === 'All' ? newsItems : newsItems.filter((item: any) => item.type === filter);
-    const materialEvent = newsItems.find((item: any) => item.isMaterial);
+export default function NewsTab({ news }: { news: any[] }) {
+    if (!news || news.length === 0) return (
+        <div className="flex flex-col items-center justify-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-300">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+                <Newspaper size={32} />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">No Signal Detected</h3>
+            <p className="text-xs text-slate-500 mt-1">We haven't tracked any news coverage for this company yet.</p>
+        </div>
+    );
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6 font-sans text-[var(--color-text-primary)] relative pb-10">
-            {/* ... Timeline Summary ... */}
-            <div className="bg-gradient-to-r from-blue-50/50 via-indigo-50/50 to-purple-50/50 border border-blue-100 rounded-xl p-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-3 opacity-30">
-                    <TrendingUp size={80} className="text-blue-200" />
-                </div>
-                <h3 className="text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
-                    <Zap size={16} className="fill-blue-500 text-blue-500" />
-                    Lemina Timeline Summary (Last 24 Months)
-                </h3>
-                <p className="text-sm text-blue-900/80 leading-relaxed max-w-2xl">
-                    <VerifiedText data={{
-                        value: `${company?.name} continues to strengthen its position in the ${company?.industry?.split('/')[0] || 'Tech'} sector. Key focus areas include market expansion and product iteration.`,
-                        isEstimated: true
-                    }} />
-                </p>
-            </div>
+        <div className="max-w-4xl space-y-10 animate-in fade-in duration-500">
+            {/* Timeline Summary (Premium Intelligence Card) */}
+            <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-white shadow-xl shadow-indigo-100/40 group">
+                {/* Decorative gradient blur */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
 
-            {/* ... rest of the render (materialEvent, filter, list) ... */}
-            {/* ... make titles employ VerifiedText if needed ... */}
-
-            {/* --- 2. Latest Material Event (Pinned) --- */}
-            {materialEvent && (
-                <div className="bg-[var(--card-bg)] border-l-4 border-l-[var(--color-accent-primary)] border-y border-r border-slate-200 rounded-r-xl rounded-l-sm p-4 shadow-sm flex items-start gap-4">
-                    <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shrink-0">
-                        <Megaphone size={20} />
+                {/* Dark Premium Header */}
+                <div className="px-6 py-4 bg-[#0F172A] flex items-center justify-between relative z-10 border-b border-indigo-900/50">
+                    <h3 className="flex items-center gap-2 text-xs font-bold text-indigo-200 uppercase tracking-widest">
+                        <Sparkles size={12} className="text-indigo-400" /> Intelligence Briefing
+                    </h3>
+                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
+                        <span className="text-[10px] font-bold text-white tracking-wide">LIVE ANALYSIS</span>
+                        <span className="text-[10px] text-slate-500 font-medium ml-1 pl-1 border-l border-white/10">24M</span>
                     </div>
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600">Latest Material Event</span>
-                            <span className="text-[10px] text-[var(--color-text-secondary)]">• {materialEvent.date}</span>
+                </div>
+
+                {/* Content */}
+                <div className="p-8 relative z-10">
+                    <div className="flex gap-5">
+                        <div className="mt-1 shrink-0">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
+                                <Activity size={20} />
+                            </div>
                         </div>
-                        <h3 className="text-base font-bold text-[var(--color-text-primary)]">
-                            <VerifiedText data={{ value: materialEvent.title, isEstimated: materialEvent.isEstimated }} />
-                        </h3>
-                        <p className="text-sm text-[var(--color-text-secondary)] mt-1">{materialEvent.leminaTake}</p>
-                    </div>
-                </div>
-            )}
-
-            {/* Filter Bar */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar sticky top-0 bg-[var(--color-bg-primary)] z-10 py-2">
-                {/* ... filters ... */}
-                <Filter size={14} className="text-[var(--color-text-secondary)] shrink-0 ml-1" />
-                {['All', 'Funding', 'Regulatory', 'Product', 'Competitive', 'Macro', 'Team'].map((f) => (
-                    <button
-                        key={f}
-                        onClick={() => setFilter(f as any)}
-                        className={`
-                            px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap
-                            ${filter === f
-                                ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] border-[var(--color-text-primary)]'
-                                : 'bg-[var(--card-bg)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:border-[var(--color-text-secondary)]'}
-                        `}
-                    >
-                        {f}
-                    </button>
-                ))}
-            </div>
-
-            {/* News Feed */}
-            <div className="space-y-4">
-                {filteredNews.map((item: any) => {
-                    const isExpanded = expandedIds.includes(item.id);
-                    return (
-                        <div key={item.id} className="bg-[var(--card-bg)] border border-[var(--color-border)] rounded-xl overflow-hidden hover:border-[var(--color-accent-primary)] transition-all group">
-                            {/* ... card content ... */}
-                            <div
-                                className="p-5 cursor-pointer"
-                                onClick={() => toggleExpand(item.id)}
-                            >
-                                <div className="flex justify-between items-start gap-4">
-                                    <div className="flex-1">
-                                        {/* ... types/source/date ... */}
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-[10px] text-[var(--color-text-secondary)] font-medium flex items-center gap-1.5 bg-[var(--input-bg)] px-2 py-1 rounded">
-                                                {getTypeIcon(item.type)} {item.type}
-                                            </span>
-                                            <span className="text-[10px] text-[var(--color-text-secondary)]">•</span>
-                                            <span className="text-[10px] text-[var(--color-text-secondary)]">{item.source}</span>
-                                            <span className="text-[10px] text-[var(--color-text-secondary)]">•</span>
-                                            <span className="text-[10px] text-[var(--color-text-secondary)]">{item.date}</span>
-                                        </div>
-
-                                        <h3 className="text-base font-bold text-[var(--color-text-primary)] leading-snug group-hover:text-[var(--color-accent-primary)] transition-colors">
-                                            <VerifiedText data={{ value: item.title, isEstimated: item.isEstimated }} />
-                                        </h3>
-                                    </div>
-
-                                    <div className={`px-2 py-1 rounded text-[10px] font-bold border flex items-center gap-1 shrink-0 ${getImpactColor(item.impact)}`}>
-                                        {item.impact === 'Positive' && <TrendingUp size={10} />}
-                                        {item.impact === 'Negative' && <TrendingUp size={10} className="rotate-180" />}
-                                        {item.impact === 'Watch' && <AlertTriangle size={10} />}
-                                        {item.impact.toUpperCase()}
-                                    </div>
+                        <div>
+                            <p className="text-slate-700 leading-8 font-medium text-[15px] max-w-2xl">
+                                "Stears continues to strengthen its position in the fintech sector. Key news coverage focuses on their <span className="font-bold text-slate-900 bg-indigo-50 px-1 rounded">pivot to B2B intelligence</span> and successful Series A fundraising. Sentiment remains <span className="text-emerald-700 font-bold">highly positive</span> with clear market confidence."
+                            </p>
+                            <div className="mt-6 flex items-center gap-4">
+                                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                    High Confidence
                                 </div>
-
-                                <div className="mt-3 flex items-center justify-between">
-                                    {/* Confidence */}
-                                    <div className="flex items-center gap-1.5">
-                                        <div className={`w-2 h-2 rounded-full ${item.isEstimated ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
-                                        <span className="text-[10px] text-[var(--color-text-secondary)] font-medium">
-                                            Confidence: {item.isEstimated ? 'Estimated' : 'High'}
-                                        </span>
-                                    </div>
-                                    <button className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
-                                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                    </button>
+                                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                    12 Sources
                                 </div>
                             </div>
-
-                            {/* Expanded */}
-                            {isExpanded && (
-                                <div className="px-5 pb-5 pt-0 border-t border-[var(--color-border)] bg-[var(--input-bg)]/30">
-                                    <div className="mt-4 space-y-3">
-                                        {/* Lemina Take */}
-                                        <div className="flex gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
-                                            <div className="mt-0.5 text-blue-500 shrink-0">
-                                                <Zap size={16} className="fill-blue-500" />
-                                            </div>
-                                            <div>
-                                                <span className="text-xs font-bold text-blue-900 block mb-0.5">Lemina Take</span>
-                                                <p className="text-xs text-blue-800/80 leading-relaxed">
-                                                    {item.leminaTake}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Full Summary */}
-                                        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                                            <VerifiedText data={{ value: item.summary, isEstimated: item.isEstimated }} />
-                                        </p>
-
-                                        {/* Original Link */}
-                                        <a href={item.url} className="inline-flex items-center gap-2 text-xs font-medium text-[var(--color-accent-primary)] hover:underline mt-2">
-                                            Read original source <ExternalLink size={12} />
-                                        </a>
-                                    </div>
-                                </div>
-                            )}
                         </div>
-                    );
-                })}
-            </div>
-            {/* ... footer ... */}
-            <div className="pt-8 border-t border-[var(--color-border)] mt-10">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
-                    {/* ... */}
-                    <span className="text-[10px] text-[var(--color-text-secondary)] opactiy-70">Sources ...</span>
+                    </div>
                 </div>
+            </div>
+
+            {/* News Feed - Vertical Timeline */}
+            <div className="relative pl-4 space-y-8">
+                {/* Vertical Line */}
+                <div className="absolute top-4 bottom-4 left-[23px] w-px bg-gradient-to-b from-slate-200 via-slate-200 to-transparent"></div>
+
+                {news.map((item: any) => (
+                    <div key={item.id} className="relative pl-10 group">
+                        {/* Timeline Node */}
+                        <div className="absolute left-[15px] top-6 w-4 h-4 rounded-full bg-white border-2 border-slate-300 group-hover:border-indigo-500 group-hover:scale-110 transition-all z-10 shadow-sm">
+                            <div className="w-1.5 h-1.5 bg-slate-300 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:bg-indigo-500 transition-colors"></div>
+                        </div>
+
+                        {/* Card */}
+                        <div className="bg-white p-6 rounded-2xl border border-slate-200 hover:border-indigo-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-start justify-between gap-6 group/card cursor-pointer">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border ${item.sentiment === 'Positive' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                            item.sentiment === 'Negative' ? 'bg-red-50 text-red-700 border-red-100' :
+                                                'bg-slate-50 text-slate-600 border-slate-100'
+                                        }`}>
+                                        {item.sentiment}
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <Clock size={12} /> {item.published_at}
+                                    </span>
+                                </div>
+                                <h4 className="text-lg font-bold text-slate-900 group-hover/card:text-indigo-700 transition-colors mb-2 leading-snug">
+                                    {item.title}
+                                </h4>
+                                <div className="flex items-center gap-2 mt-3">
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">{item.source}</span>
+                                    <span className="text-slate-300">•</span>
+                                    <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded">{item.category}</span>
+                                </div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded-xl text-slate-300 group-hover/card:text-indigo-600 group-hover/card:bg-indigo-50 transition-colors">
+                                <ArrowUpRight size={20} />
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );

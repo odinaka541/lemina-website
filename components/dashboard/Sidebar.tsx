@@ -23,8 +23,8 @@ const navItems = [
 ];
 
 const networkItems = [
-    { name: 'My Network', href: '/dashboard/syndicate', icon: Users },
-    { name: 'Deal Flow', href: '/dashboard/syndicate/deals', icon: Target },
+    { name: 'My Network', href: '/dashboard/network', icon: Users },
+    { name: 'Deal Flow', href: '/dashboard/network/deals', icon: Target },
 ];
 
 interface SidebarProps {

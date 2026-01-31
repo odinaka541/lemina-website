@@ -125,101 +125,112 @@ export default function DashboardPage() {
     const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
     return (
-        <div className="container mx-auto px-4 pt-32 pb-12 space-y-10">
-            {/* Header / Welcome */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 mb-1 tracking-tight">
-                        {greeting}, {user.name}! <span className="ml-1">👋</span>
-                    </h1>
-                    <p className="text-slate-500 font-medium text-sm">
-                        Here's everything you missed.
-                    </p>
+        <div className="min-h-screen bg-slate-50/50 pb-32">
+
+            {/* Glass Canopy Header Section */}
+            <div className="relative border-b border-indigo-100/50 overflow-hidden bg-white/40 backdrop-blur-xl pt-12 pb-6">
+                {/* Abstract Background Blobs */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-50/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-60"></div>
+                    <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-sky-50/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 opacity-50"></div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <p className="text-xs text-slate-400 font-medium hidden md:block">
-                        Last updated: <span className="text-slate-600">Just now</span>
-                    </p>
-                    <Link
-                        href="/dashboard/pipeline?action=new"
-                        className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all"
-                    >
-                        <Plus size={16} />
-                        New Deal
-                    </Link>
+
+                <div className="container mx-auto px-6 relative z-10 space-y-6">
+                    {/* Header / Welcome */}
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div className="space-y-2">
+                            <h1 className="text-4xl font-bold text-slate-900 tracking-tight font-sans">
+                                {greeting}, {user.name}! 👋
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <Link
+                                href="/dashboard/pipeline?action=new"
+                                className="group flex items-center gap-3 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                            >
+                                <Plus size={18} className="text-slate-300 group-hover:text-white transition-colors" />
+                                <span>Create New Deal</span>
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Stats Grid - 3 Horizontal Tactile Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                        {/* 1. Pending Actions (List View) */}
+                        <TaskActionCard tasks={tasks} />
+
+                        {/* 2. Active Diligence */}
+                        <StatCard
+                            icon={Activity}
+                            label="Active Diligence"
+                            value={stats.active_diligence.toString()}
+                            subtext={stats.active_diligence > 0 ? "Deals in negotiation" : "Pipeline empty"}
+                            color="indigo"
+                            variant="compact"
+                            actionLabel="Go to Pipeline"
+                            actionLink="/dashboard/pipeline"
+                        />
+
+                        {/* 3. New Opportunities (Grayscale requested, Zap icon remains) */}
+                        <StatCard
+                            icon={Zap}
+                            label="New Opportunities"
+                            value={stats.new_opportunities.toString()}
+                            subtext="Added this week"
+                            color="amber"
+                            variant="compact"
+                            actionLabel="Discover"
+                            actionLink="/search?sort=newest"
+                        />
+                    </div>
                 </div>
-            </div>
-
-            {/* Stats Grid - 3 Horizontal Compact Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                {/* 1. Pending Actions (List View) */}
-                <TaskActionCard tasks={tasks} />
-
-                {/* 2. Active Diligence */}
-                <StatCard
-                    icon={Activity}
-                    label="Active Diligence"
-                    value={stats.active_diligence.toString()}
-                    subtext={stats.active_diligence > 0 ? "In progress now" : "No active pipeline"}
-                    color="gray"
-                    variant="compact"
-                    actionLabel="View Pipeline"
-                    actionLink="/dashboard/pipeline"
-                />
-
-                {/* 3. New Opportunities (Grayscale requested, Zap icon remains) */}
-                <StatCard
-                    icon={Zap}
-                    label="New Opportunities"
-                    value={stats.new_opportunities.toString()}
-                    subtext="Added this week"
-                    color="gray" // Grayscale as requested
-                    variant="compact"
-                    actionLabel="View Companies"
-                    actionLink="/search?sort=newest"
-                />
             </div>
 
             {/* Empty State vs Main Content */}
             {isNewUser && !isLoading ? (
-                <OnboardingState />
+                <div className="container mx-auto px-6 mt-10">
+                    <OnboardingState />
+                </div>
             ) : null}
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+            <div className="container mx-auto px-6 mt-12 grid grid-cols-1 xl:grid-cols-4 gap-10 items-start">
+
                 {/* Left Column - Feeds */}
-                <div className="xl:col-span-3 space-y-10">
+                <div className="xl:col-span-3 space-y-12">
 
                     {/* Personalized Recommendations */}
                     <section>
-                        <div className="flex justify-between items-center mb-6">
+                        {/* Premium Section Header */}
+                        <div className="flex justify-between items-end mb-8 border-b border-slate-200 pb-4">
                             <div>
-                                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-1">
-                                    <Zap size={20} className="text-slate-400 fill-slate-400" /> {/* Grayscale Icon */}
-                                    Top matches for you
+                                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                    Top Matches
                                 </h2>
-                                <p className="text-sm text-slate-500 font-medium">Here are companies that match your investment thesis.</p>
+                                <p className="text-sm text-slate-500 font-medium">Curated selection based on your thesis</p>
                             </div>
                             <Link
                                 href="/search?filter=recommended"
-                                className="text-sm font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                                className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-wide px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
                             >
-                                View All <ArrowRight size={14} />
+                                View All <ArrowRight size={12} />
                             </Link>
                         </div>
 
                         {/* Top Matches Filters */}
-                        <FilterBar filters={filters} onFilterChange={setFilters} />
+                        <div className="mb-6">
+                            <FilterBar filters={filters} onFilterChange={setFilters} />
+                        </div>
 
                         {isLoading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {[1, 2].map(n => (
-                                    <div key={n} className="h-[240px] bg-white rounded-2xl animate-pulse border border-slate-100"></div>
+                                    <div key={n} className="h-[280px] bg-white rounded-2xl animate-pulse border border-slate-100 shadow-sm"></div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {recommended.map((company, i) => (
                                     <CompanyCard
                                         key={company.id}
@@ -228,8 +239,11 @@ export default function DashboardPage() {
                                     />
                                 ))}
                                 {recommended.length === 0 && (
-                                    <div className="col-span-2 py-10 text-center border-2 border-dashed border-slate-200 rounded-xl">
-                                        <p className="text-slate-400">No companies found matching current filters.</p>
+                                    <div className="col-span-2 py-16 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                                        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                            <Search size={20} className="text-slate-400" />
+                                        </div>
+                                        <p className="text-slate-500 font-medium">No results match your filters.</p>
                                     </div>
                                 )}
                             </div>
@@ -238,33 +252,35 @@ export default function DashboardPage() {
 
                     {/* Trending Section */}
                     <section>
-                        <div className="flex justify-between items-center mb-6">
+                        {/* Premium Section Header */}
+                        <div className="flex justify-between items-end mb-8 border-b border-slate-200 pb-4">
                             <div>
-                                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-1">
-                                    <TrendingUp size={20} className="text-slate-400" /> {/* Grayscale Icon */}
-                                    Trending in Network
+                                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                    Trending Now
                                 </h2>
-                                <p className="text-sm text-slate-500 font-medium">Rising stars with high investor momentum.</p>
+                                <p className="text-sm text-slate-500 font-medium">High momentum across the network</p>
                             </div>
                         </div>
 
-                        {/* Trending Filters (Independent) */}
-                        <FilterBar filters={trendingFilters} onFilterChange={setTrendingFilters} />
+                        {/* Trending Filters */}
+                        <div className="mb-6">
+                            <FilterBar filters={trendingFilters} onFilterChange={setTrendingFilters} />
+                        </div>
 
                         {isLoading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {[1, 2].map(n => (
-                                    <div key={n} className="h-[240px] bg-white rounded-2xl animate-pulse border border-slate-100"></div>
+                                    <div key={n} className="h-[280px] bg-white rounded-2xl animate-pulse border border-slate-100 shadow-sm"></div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {trending.map(company => (
                                     <CompanyCard key={company.id} {...company} />
                                 ))}
                                 {trending.length === 0 && (
-                                    <div className="col-span-2 py-10 text-center border-2 border-dashed border-slate-200 rounded-xl">
-                                        <p className="text-slate-400">No trending companies found.</p>
+                                    <div className="col-span-2 py-16 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                                        <p className="text-slate-400 font-medium">No trending companies found.</p>
                                     </div>
                                 )}
                             </div>
@@ -273,13 +289,14 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Right Column - Activity */}
-                <div className="space-y-6">
+                <div className="space-y-8 sticky top-32">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Live Activity</h3>
+                        <div className="h-px bg-slate-200 flex-1 ml-4"></div>
+                    </div>
                     <ActivityFeed activities={activities} isLoading={loadingActivities} />
                 </div>
             </div>
-
-            {/* Bottom Spacer */}
-            <div className="h-20 w-full" aria-hidden="true" />
         </div>
     );
 }

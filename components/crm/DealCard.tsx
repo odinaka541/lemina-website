@@ -55,9 +55,9 @@ export default function DealCard({ deal, index, onClick }: DealCardProps) {
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
                     onClick={() => onClick(deal)}
-                    className={`p-5 rounded-xl border mb-4 transition-all group cursor-pointer relative overflow-hidden bg-[var(--card-bg)] ${snapshot.isDragging
-                        ? 'border-[var(--color-accent-primary)] shadow-2xl scale-105 z-50 ring-1 ring-[var(--color-accent-primary)]'
-                        : 'border-[var(--color-border)] hover:border-[var(--color-accent-primary)] hover:shadow-lg hover:-translate-y-0.5'
+                    className={`p-5 rounded-xl mb-3 transition-all duration-300 group cursor-pointer relative overflow-hidden ${snapshot.isDragging
+                        ? 'bg-white shadow-2xl scale-105 z-50 ring-2 ring-emerald-500 rotate-2'
+                        : 'bg-white border border-slate-200/60 shadow-sm hover:shadow-lg hover:border-emerald-500/30 hover:-translate-y-1'
                         }`}
                     style={provided.draggableProps.style}
                 >

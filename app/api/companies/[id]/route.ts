@@ -1,155 +1,165 @@
+import { NextResponse } from 'next/server';
 
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server-simple'
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+    const id = params.id;
 
-export async function GET(
-    request: Request,
-    { params }: { params: Promise<{ id: string }> } // Params are promises in Next.js 15
-) {
-    try {
-        const { id } = await params
-        const supabase = createClient()
+    // Simulate different data depth based on ID (for testing)
+    // Default to "Rich Data" (Stears example)
+    const company = {
+        id: id,
+        name: "Stears",
+        description: "Stears is a financial intelligence company providing data and insights for African markets. They help businesses and investors make better decisions through rigorous analysis and on-the-ground intelligence.",
+        sector: "Fintech",
+        sub_sector: "Market Intelligence",
+        country: "Nigeria",
+        city: "Lagos",
+        location: "Lagos, Nigeria",
+        status: "Active",
+        founded_year: 2017,
+        website: "https://stears.co",
+        logo_url: "/logos/stears.png", // Mock path
+        verification_tier: 4,
+        employees_range: "10-50",
 
-        // Fetch everything related to the company
-        const { data: company, error } = await supabase
-            .from('companies')
-            .select(`
-                *,
-                funding_rounds(*),
-                metrics(*),
-                regulatory_info(*)
-            `)
-            .eq('id', id)
-            .single()
+        // Funding (Rich Data)
+        funding_stage: "Series A",
+        funding_amount: 3300000,
+        funding_date: "2023-01-01",
+        investors: ["MaC Venture Capital", "Serena Ventures", "Omidyar Group", "Luminate"],
 
-        if (error) throw error
-        if (!company) {
-            return NextResponse.json({ error: 'Company not found' }, { status: 404 })
-        }
+        // Legal
+        registration_number: "RC142567",
+        registration_status: "Active",
+        registration_date: "2017-08-15",
 
-        // ADAPTER: Transform DB Flat Row -> User Specified Nested Detail Payload
-        const detailPayload = {
-            id: company.id,
-            name: company.name,
-            slug: company.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            website: company.website,
-            logo_url: company.logo_url,
-            description_short: company.short_description,
-            description_long: company.long_description || company.short_description,
-
-            metadata: {
-                founded_year: {
-                    value: company.founded_year,
-                    source: "lemina_db"
-                },
-                headquarters: {
-                    city: company.headquarters ? company.headquarters.split(',')[0].trim() : null,
-                    country: company.headquarters ? company.headquarters.split(',')[1]?.trim() : null,
-                    country_code: 'NG'
-                },
-                team_size: {
-                    value: company.team_size,
-                    value_range: company.team_size ? `${company.team_size}+` : 'Unknown', // Estimating range
-                    verification_tier: 3
-                },
-                legal_entity_name: {
-                    value: company.legal_name || company.name,
-                    verification_tier: 5
-                }
+        // Founders
+        founders: [
+            {
+                name: "Preston Ideh",
+                title: "Co-founder & CEO",
+                photo_url: "",
+                background: "Ex-Corporate Finance, LSE Alum"
             },
-
-            sector: {
-                primary: company.sector,
-                sub_sector: company.sub_sector,
-                verticals: [company.sector, company.sub_sector].filter(Boolean)
+            {
+                name: "Abdul Abdulrahim",
+                title: "Co-founder & COO",
+                photo_url: "",
+                background: "Ex-Data Scientist, Oxford Alum"
             },
-
-            verification: {
-                overall_tier: company.verification_status === 'verified' ? 5 : 1,
-                tier_label: company.verification_status,
-                data_quality_score: company.data_quality_score,
-                last_verified_at: company.last_verified_date || company.updated_at
-            },
-
-            financials: {
-                funding_stage: {
-                    value: company.funding_stage || (company.funding_rounds?.[0]?.round_name),
-                    verification_tier: 2
-                },
-                total_funding_usd: {
-                    value: company.total_funding_usd,
-                    value_formatted: company.total_funding_usd
-                        ? `$${(company.total_funding_usd / 1000000).toFixed(1)}m`
-                        : 'Undisclosed'
-                },
-                last_round_date: {
-                    value: company.last_funding_date
-                },
-                investors: company.funding_rounds?.map((r: any) => ({
-                    name: r.investor_name, // Assuming this field exists or needs mapping
-                    round: r.round_name
-                })) || [],
-                valuation_usd: {
-                    value: null, // DB doesn't seem to have valuation col, defaulting
-                    value_formatted: "Undisclosed",
-                    note: "not publicly disclosed"
-                },
-                annual_revenue_usd: {
-                    value: null,
-                    note: "not publicly disclosed"
-                }
-            },
-
-            metrics: {
-                traction: company.metrics?.map((m: any) => ({
-                    field_name: m.metric_name,
-                    label: m.metric_name.replace(/_/g, ' '),
-                    value: m.metric_value,
-                    period: m.period
-                })) || [],
-                social: {
-                    linkedin_followers: { value: 0 }, // Placeholder if not in DB
-                    twitter_followers: { value: 0 }
-                },
-                engineering: {
-                    github_repos: { value: 0 }
-                }
-            },
-
-            regulatory: {
-                licenses: company.regulatory_info || []
-            },
-
-            team: {
-                founders: [] // Data seems null in DB inspection, leaving empty
-            },
-
-            data_quality: {
-                overall_score: company.data_quality_score
-            },
-
-            timeline: {
-                created_at: company.created_at,
-                updated_at: company.updated_at
-            },
-
-            // Mock Analysis for "Signals" and "Risks" since DB is currently empty for these
-            analysis: {
-                key_strengths: [
-                    { point: "Solid market position in " + (company.sector || 'sector') },
-                    { point: "Operating since " + (company.founded_year || '2015') }
-                ],
-                red_flags: []
+            {
+                name: "Michael Famoroti",
+                title: "Co-founder & Chief Economist",
+                photo_url: "",
+                background: "Ex-KPMG, PhD Economics"
             }
+        ],
+
+        // Documents
+        documents: [
+            {
+                id: "d1",
+                title: "Market Expansion Deck 2024",
+                file_type: "pdf",
+                file_size: 4500000,
+                uploaded_at: "2024-03-15",
+                ai_analyzed: true
+            },
+            {
+                id: "d2",
+                title: "Q4 2023 Financials",
+                file_type: "xlsx",
+                file_size: 1200000,
+                uploaded_at: "2024-01-20",
+                ai_analyzed: true
+            }
+        ],
+
+        // News
+        news: [
+            {
+                id: "n1",
+                title: "Stears raises $3.3M seed round led by MaC Venture Capital",
+                source: "TechCrunch",
+                category: "Funding",
+                sentiment: "Positive",
+                published_at: "2022-10-18"
+            },
+            {
+                id: "n2",
+                title: "Bloomberg for Africa? Stears pivots to intelligence",
+                source: "TechCabal",
+                category: "Product",
+                sentiment: "Neutral",
+                published_at: "2023-11-05"
+            }
+        ],
+
+        // Metadata for UI logic
+        metadata: {
+            headquarters: { city: "Lagos", country: "Nigeria" }
         }
+    };
 
-        return NextResponse.json(detailPayload)
+    const market = {
+        tam: 2000000000,
+        growth_rate: 15,
+        competitor_count: 12,
+        tailwinds: [
+            "Growing demand for FX data in Nigeria",
+            "Increasing institutional investment in Africa",
+            "Data fragmentation creates opportunity for aggregators"
+        ],
+        headwinds: [
+            "Currency devaluation impacts subscription costs",
+            "Difficulty in verifying private market data"
+        ],
+        competitors: [
+            { name: "TechCabal Insights", stage: "Seed", last_round: "2020", status: "Active" },
+            { name: "SBM Intelligence", stage: "Bootstrapped", last_round: "N/A", status: "Active" },
+            { name: "Briter Bridges", stage: "Seed", last_round: "2021", status: "Active" }
+        ]
+    };
 
-    } catch (error: any) {
-        console.error('❌ company fetch error:', error)
-        return NextResponse.json(
-            { error: error.message || 'failed to fetch company' },
-            { status: 500 }
-        )
-    }
+    const ai_analysis = {
+        investment_memo: `
+### Executive Summary
+Stears represents a classic "Bloomberg for Africa" play, capitalizing on the opacity of African financial markets. With $3.3M in funding and top-tier investors like Serena Ventures, they have the capital to execute. The pivot from consumer media to B2B intelligence is strategic, targeting higher LTV checks from institutional investors and corporates.
+
+### Market Opportunity
+The market for financial data in Africa is fragmented but growing. While the TAM ($2B) is smaller than global markets, the "Winner Take Most" dynamic in data infrastructure suggests high upside if they become the standard.
+
+### Company Analysis
+**Strengths:**
+*   **Strong Team:** Founders have deep domain expertise (Economics, Law, Data Science).
+*   **Brand Authority:** Widely cited by global media (FT, Bloomberg, CNN).
+*   **Proprietary Data:** They are building unique datasets (e.g., intense election forecasting models) that others lack.
+
+**Unknowns:**
+*   **CAC Efficiency:** B2B enterprise sales cycles in Africa can be long.
+*   **Churn:** Are subscribers sticking around after the election cycle hype?
+
+### Investment Considerations
+*   **Valuation:** Pricing data infrastructure in Africa is tricky.
+*   **Exit:** Likely acquisition targets include global players like Bloomberg, Refinitiv, or S&P looking for African footprint.
+
+**Recommendation:**
+Monitor churn rates closely in Q3/Q4. If retention holds >90%, they are a strong Series A candidate.
+        `,
+        quick_summary: {
+            facts: { founded: 2017, location: "Lagos", sector: "Fintech", status: "Active" },
+            market: { tam: "$2B", growth: "15%", competition: "Moderate" },
+            investment: { stage: "Series A", raised: "$3.3M", last_round: "2023" }
+        },
+        signals: [
+            "Operating for 7+ years (proven longevity)",
+            "Backed by Serena Ventures (strong signal)",
+            "Tier 4 Verified (Founder verified)"
+        ],
+        risks: [
+            "Niche market size compared to payments/lending",
+            "Heavy tough competition from global incumbents"
+        ]
+    };
+
+    return NextResponse.json({ company, market, ai_analysis });
 }

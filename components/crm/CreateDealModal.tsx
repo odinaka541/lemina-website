@@ -8,26 +8,16 @@ import {
     Loader2, UserCheck, Layout, ChevronDown, PieChart
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
+import { createPortal } from 'react-dom';
 
-interface CreateDealModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSuccess: () => void;
-    defaultStage?: string;
-}
-
+// Define interfaces locally to fix missing type errors
 interface Company {
     id: string;
     name: string;
     website?: string;
-    sector?: string;
-    country?: string;
-}
-
-interface NetworkContact {
-    id: string;
-    name: string;
-    role: string;
+    location?: string;
+    description?: string;
+    matchScore?: number;
 }
 
 interface DealFormData {
@@ -36,27 +26,32 @@ interface DealFormData {
     new_company_website?: string;
     new_company_country?: string;
     new_company_sector?: string;
-    investment_amount: number | '';
-    round_size?: number | '';
-    deal_source: 'warm_intro' | 'cold_outreach' | 'conference' | 'network_referral' | 'other' | '';
+    investment_amount: number | string;
+    round_size?: number | string;
+    deal_source: string;
     initial_notes?: string;
-    introduced_by?: string;
     expected_close_date?: string;
     is_syndicate: boolean;
     syndicate_lead?: string;
-    probability?: number;
+    introduced_by?: string;
     priority: 'High' | 'Medium' | 'Low';
 }
 
-// Mock contacts for demo
-const MOCK_CONTACTS: NetworkContact[] = [
-    { id: '1', name: 'Chioma Davis', role: 'Partner' },
-    { id: '2', name: 'David Oyelowo', role: 'Angel Investor' },
-    { id: '3', name: 'Sarah Chen', role: 'VC Associate' }
-];
+interface CreateDealModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSuccess: () => void;
+    defaultStage?: string;
+    defaultCompanyId?: string | null;
+    defaultCompanyName?: string | null;
+}
 
-export default function CreateDealModal({ isOpen, onClose, onSuccess, defaultStage }: CreateDealModalProps) {
+// ... imports and interfaces ...
+
+export default function CreateDealModal({ isOpen, onClose, onSuccess, defaultStage, defaultCompanyId, defaultCompanyName }: CreateDealModalProps) {
     const { showToast } = useToast();
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
 
     // Data State
     const [companies, setCompanies] = useState<Company[]>([]);
@@ -70,7 +65,7 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess, defaultSta
         const defaultCloseDate = date.toISOString().split('T')[0];
 
         return {
-            company_id: null,
+            company_id: defaultCompanyId || null,
             investment_amount: '',
             deal_source: '',
             is_syndicate: false,
@@ -79,6 +74,18 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess, defaultSta
             expected_close_date: defaultCloseDate
         };
     });
+
+    // Update form data if defaults change while open - important for re-opening with different params
+    useEffect(() => {
+        if (isOpen && (defaultCompanyId || defaultCompanyName)) {
+            setFormData(prev => ({
+                ...prev,
+                company_id: defaultCompanyId || null
+            }));
+            // If we have a name but can't find the ID in the list (yet), we might handle it via the select logic
+            // But usually the ID is the source of truth for existing companies.
+        }
+    }, [isOpen, defaultCompanyId, defaultCompanyName]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -244,13 +251,15 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess, defaultSta
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
 
-    return (
+    if (!mounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-[#030712]/60 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto"
+                className="fixed inset-0 bg-[#030712]/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 overflow-y-auto"
                 onClick={onClose}
             >
                 <div className="flex items-center justify-center w-full h-full p-4">
@@ -547,6 +556,7 @@ export default function CreateDealModal({ isOpen, onClose, onSuccess, defaultSta
                     </motion.div>
                 </div>
             </motion.div>
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }
