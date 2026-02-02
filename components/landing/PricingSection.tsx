@@ -97,7 +97,7 @@ export default function PricingSection() {
             cta: "Start Free Trial",
             highlighted: true,
             badge: "MOST POPULAR",
-            smallPrint: "14-day free trial. No credit card required."
+            smallPrint: "7-day free trial. No credit card required."
         },
         {
             name: "Network",
