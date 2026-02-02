@@ -47,24 +47,21 @@ export default function TeamLegalTab({ founders, legal }: { founders: any[], leg
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Incorporation */}
-                    <div className="bg-white px-6 py-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:border-emerald-200 hover:shadow-md transition-all">
+                    <div className="bg-white px-6 py-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:border-slate-300 hover:shadow-md transition-all">
                         <div>
                             <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Incorporation</span>
                             <div className="flex items-center gap-2 mb-1">
-                                <span className="font-bold text-slate-900 text-lg">CAC Nigeria</span>
-                                <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-wide">
-                                    <ShieldCheck size={10} /> Verified
-                                </span>
+                                <span className="font-bold text-slate-900 text-lg">Cartão Nacional de Identificação</span>
                             </div>
-                            <span className="text-xs font-mono text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded inline-block">Reg: <span className="text-slate-700 font-bold">{legal.registration_number}</span></span>
+                            <span className="text-xs font-mono text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded inline-block">Reg: <span className="text-slate-700 font-bold">{legal.registration_number || 'Pending'}</span></span>
                         </div>
                         <div className="text-right">
                             <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status</span>
-                            <span className="font-bold text-emerald-600 text-lg flex items-center justify-end gap-1.5">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                {legal.registration_status}
+                            <span className="font-bold text-slate-500 text-lg flex items-center justify-end gap-1.5">
+                                <div className="w-2 h-2 rounded-full bg-slate-400"></div>
+                                Pending Verification
                             </span>
-                            <span className="text-[10px] text-slate-400 font-medium uppercase mt-1 block">Since {legal.registration_date}</span>
+                            <span className="text-[10px] text-slate-400 font-medium uppercase mt-1 block">Status Unknown</span>
                         </div>
                     </div>
 

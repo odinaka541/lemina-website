@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // HIDDEN IN PROD: Redirect all dashboard traffic to home
+  if (process.env.NODE_ENV === 'production' && request.nextUrl.pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
   // Disabled for Performance/Demo reasons as requested
   // return await updateSession(request)
   return NextResponse.next()

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Target, Star, ArrowRight } from 'lucide-react';
 
@@ -45,6 +46,7 @@ export default function CompanyCard({
     verificationTier,
     confidenceScore
 }: CompanyCardProps) {
+    const router = useRouter();
     const [showDescriptionModal, setShowDescriptionModal] = useState(false);
     const displayMetrics = metrics;
 
@@ -192,10 +194,18 @@ export default function CompanyCard({
 
                     <div className="flex items-center gap-2">
                         {/* Quick Actions */}
-                        <button className="w-7 h-7 flex items-center justify-center rounded-full border border-[var(--glass-border-color)] bg-[var(--input-bg)] hover:bg-[var(--glass-border-color)] text-[var(--color-text-secondary)] hover:text-indigo-600 transition-colors" title="Add to Pipeline">
+                        <button
+                            onClick={() => router.push(`/dashboard/pipeline?action=new&companyName=${encodeURIComponent(name)}&companyId=${id}`)}
+                            className="w-7 h-7 flex items-center justify-center rounded-full border border-[var(--glass-border-color)] bg-[var(--input-bg)] hover:bg-[var(--glass-border-color)] text-[var(--color-text-secondary)] hover:text-indigo-600 transition-colors"
+                            title="Add to Pipeline"
+                        >
                             <Target size={12} />
                         </button>
-                        <button className="w-7 h-7 flex items-center justify-center rounded-full border border-[var(--glass-border-color)] bg-[var(--input-bg)] hover:bg-[var(--glass-border-color)] text-[var(--color-text-secondary)] hover:text-indigo-600 transition-colors" title="Track Company">
+                        <button
+                            onClick={() => router.push(`/dashboard/alerts?action=create&company=${encodeURIComponent(name)}&type=company`)}
+                            className="w-7 h-7 flex items-center justify-center rounded-full border border-[var(--glass-border-color)] bg-[var(--input-bg)] hover:bg-[var(--glass-border-color)] text-[var(--color-text-secondary)] hover:text-indigo-600 transition-colors"
+                            title="Track Company"
+                        >
                             <Star size={12} />
                         </button>
 
