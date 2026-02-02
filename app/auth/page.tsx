@@ -21,20 +21,16 @@ export default function LoginPage() {
         setLoading(true)
         setError(null)
 
-        try {
-            const { error } = await supabase.auth.signInWithOtp({
-                email,
-                options: {
-                    emailRedirectTo: `${location.origin}/auth/callback`,
-                },
-            })
-            if (error) throw error
-            setSent(true)
-        } catch (err: any) {
-            setError(err.message)
-        } finally {
+        // MOCK AUTH for Demo
+        setTimeout(() => {
             setLoading(false)
-        }
+            setSent(true)
+
+            // Redirect to dashboard after showing success for a moment
+            setTimeout(() => {
+                router.push('/dashboard')
+            }, 2000)
+        }, 1500)
     }
 
     const handleGoogleLogin = async () => {

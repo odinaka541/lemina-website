@@ -70,7 +70,7 @@ export async function middleware(request: NextRequest) {
   // Redirect Logic
   if (isProtectedRoute && !user) {
     // If accessing protected route without user, redirect to login
-    return NextResponse.redirect(new URL('/auth', request.url))
+    // return NextResponse.redirect(new URL('/auth', request.url)) // DISABLED FOR DEMO MOCK
   }
 
   if (isAuthRoute && user && !request.nextUrl.pathname.startsWith('/auth/callback')) {
