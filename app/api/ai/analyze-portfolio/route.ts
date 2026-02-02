@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-const pdf = require('pdf-parse');
+// const pdf = require('pdf-parse');
 import { Investment } from '@/lib/types';
 
 // Initialize Groq Client
@@ -53,8 +53,9 @@ export async function POST(req: Request) {
         // 3. Extract Text
         let textContent = '';
         if (doc.file_type === 'application/pdf' || doc.file_name.endsWith('.pdf')) {
-            const data = await pdf(buffer);
-            textContent = data.text;
+            // const data = await pdf(buffer);
+            // textContent = data.text;
+            textContent = "PDF Content Analysis temporarily disabled for Vercel deployment. Please use text files.";
         } else {
             // Assume text/plain or fail gracefully
             textContent = buffer.toString('utf-8');
