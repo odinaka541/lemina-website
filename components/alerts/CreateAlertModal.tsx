@@ -7,19 +7,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface CreateAlertModalProps {
     onClose: () => void;
     onSave: (alert: any) => Promise<void>;
+    initialData?: { type?: string, name?: string };
 }
 
-export default function CreateAlertModal({ onClose, onSave }: CreateAlertModalProps) {
-    const [step, setStep] = useState(1);
+export default function CreateAlertModal({ onClose, onSave, initialData }: CreateAlertModalProps) {
+    const [step, setStep] = useState(initialData?.name ? 2 : 1); // Skip to step 2 if name provided
     const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState({
-        type: 'deal_flow',
+        type: initialData?.type || 'deal_flow',
         conditions: {
             sector: [],
             stage: [],
             geo: [],
         },
-        name: '',
+        name: initialData?.name || '',
         channels: ['email'],
         frequency: 'instant'
     });

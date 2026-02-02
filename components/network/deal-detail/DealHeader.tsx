@@ -13,7 +13,7 @@ export default function DealHeader({ company, urgency }: DealHeaderProps) {
                 {/* Left: Company Info */}
                 <div className="flex gap-5 items-center">
                     <div className="w-20 h-20 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-3xl font-bold shadow-lg shadow-indigo-500/10">
-                        {company.name.charAt(0)}
+                        {company.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900 tracking-tight leading-none mb-2">{company.name}</h1>

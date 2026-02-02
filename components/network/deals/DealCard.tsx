@@ -53,7 +53,7 @@ export default function DealCard({ deal, onCommit }: DealCardProps) {
                 <div className="flex gap-4">
                     {/* Logo Fallback */}
                     <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-xl shrink-0 shadow-sm">
-                        {deal.company.name.charAt(0)}
+                        {deal.company.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
                         <h3 className="text-xl font-bold text-slate-900 leading-tight mb-0.5">{deal.company.name}</h3>

@@ -20,6 +20,7 @@ export async function GET(request: Request) {
         regulatory_info(*),
         verification_status
       `)
+      .order('confidence_score', { ascending: false })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -45,6 +46,7 @@ export async function GET(request: Request) {
 
     if (error) throw error
 
+    // ADAPTER: Transform DB Flat Rows -> User Specified JSON List Payload
     // ADAPTER: Transform DB Flat Rows -> User Specified JSON List Payload
     const mappedCompanies = companies?.map(row => ({
       id: row.id,
@@ -83,6 +85,18 @@ export async function GET(request: Request) {
       },
       last_verified_at: row.last_verified_date || row.updated_at
     }))
+
+    // DEMO PIN: Force Stears and EcoCharge CV to top
+    const pinnedNames = ['Stears', 'EcoCharge CV'];
+    mappedCompanies?.sort((a, b) => {
+      const aPinned = pinnedNames.indexOf(a.name);
+      const bPinned = pinnedNames.indexOf(b.name);
+
+      if (aPinned !== -1 && bPinned !== -1) return aPinned - bPinned;
+      if (aPinned !== -1) return -1;
+      if (bPinned !== -1) return 1;
+      return 0;
+    });
 
     return NextResponse.json({
       data: mappedCompanies || [],

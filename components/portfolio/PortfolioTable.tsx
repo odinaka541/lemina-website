@@ -83,7 +83,7 @@ export default function PortfolioTable({ investments }: PortfolioTableProps) {
                                             {inv.company?.logo_url ? (
                                                 <img src={inv.company.logo_url} alt={inv.company?.name} className="w-full h-full object-contain" />
                                             ) : (
-                                                <span className="text-xs font-black text-slate-800">{inv.company?.name.charAt(0)}</span>
+                                                <span className="text-xs font-black text-slate-800">{inv.company?.name.slice(0, 2).toUpperCase()}</span>
                                             )}
                                         </div>
                                         <div>

@@ -7,19 +7,32 @@ import {
     TrendingUp, ShieldAlert, Radio, Activity, Users
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import CreateAlertModal from '@/components/alerts/CreateAlertModal';
 import { useToast } from '@/components/providers/ToastProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AlertsPage() {
     const { showToast } = useToast();
+    const searchParams = useSearchParams();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [initialModalData, setInitialModalData] = useState<{ type?: string, name?: string } | undefined>(undefined);
     const [alerts, setAlerts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchAlerts();
     }, []);
+
+    useEffect(() => {
+        const action = searchParams.get('action');
+        if (action === 'create') {
+            const type = searchParams.get('type') || 'deal_flow';
+            const name = searchParams.get('company') || '';
+            setInitialModalData({ type, name });
+            setIsCreateModalOpen(true);
+        }
+    }, [searchParams]);
 
     const fetchAlerts = async () => {
         try {
@@ -324,7 +337,11 @@ export default function AlertsPage() {
 
             {isCreateModalOpen && (
                 <CreateAlertModal
-                    onClose={() => setIsCreateModalOpen(false)}
+                    initialData={initialModalData}
+                    onClose={() => {
+                        setIsCreateModalOpen(false);
+                        setInitialModalData(undefined);
+                    }}
                     onSave={handleCreateAlert}
                 />
             )}

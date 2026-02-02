@@ -25,7 +25,8 @@ export default function ActiveDealsPreview() {
     const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
 
     useEffect(() => {
-        fetch('/api/network/active-deals')
+        // Use the main deals endpoint filtered by status for consistency
+        fetch('/api/network/deals?status=open&limit=3')
             .then(res => res.json())
             .then(res => {
                 setDeals(res.data || []);
@@ -68,7 +69,7 @@ export default function ActiveDealsPreview() {
                         <div className="p-6 border-b border-slate-50 flex-1">
                             <div className="flex justify-between items-start mb-5">
                                 <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-slate-900/20 group-hover:scale-105 transition-transform duration-300">
-                                    {deal.company_name.charAt(0)}
+                                    {deal.company_name.slice(0, 2).toUpperCase()}
                                 </div>
                                 <div className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border ${deal.stage_badge === 'CLOSING SOON' ? 'bg-amber-50 border-amber-100 text-amber-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700'
                                     }`}>

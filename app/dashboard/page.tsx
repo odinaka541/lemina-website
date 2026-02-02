@@ -278,7 +278,7 @@ export default function DashboardPage() {
                         <div className="flex justify-between items-end mb-8 border-b border-slate-200 pb-4">
                             <div>
                                 <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2 mb-2">
-                                    Trending Now
+                                    Popular in Network
                                 </h2>
                                 <p className="text-sm text-slate-500 font-medium">High momentum across the network</p>
                             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import QuickCommitModal from '@/components/network/QuickCommitModal';
@@ -14,13 +14,14 @@ import CommitmentTracker from '@/components/network/deal-detail/CommitmentTracke
 import DiscussionSection from '@/components/network/deal-detail/DiscussionSection';
 import AIAnalysisPanel from '@/components/network/deal-detail/AIAnalysisPanel';
 
-export default function DealDetailPage({ params }: { params: { id: string } }) {
+export default function DealDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const [deal, setDeal] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isCommitModalOpen, setIsCommitModalOpen] = useState(false);
 
     useEffect(() => {
-        fetch(`/api/network/deals/${params.id}`)
+        fetch(`/api/network/deals/${id}`)
             .then(res => res.json())
             .then(res => {
                 setDeal(res.deal);
@@ -30,7 +31,7 @@ export default function DealDetailPage({ params }: { params: { id: string } }) {
                 console.error(err);
                 setLoading(false);
             });
-    }, [params.id]);
+    }, [id]);
 
     if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div></div>;
 

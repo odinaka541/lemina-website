@@ -30,6 +30,8 @@ function SearchPageContent() {
 
     const [companies, setCompanies] = useState<CompanyCardProps[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     // Fetch when filters change
     useEffect(() => {
@@ -40,8 +42,12 @@ function SearchPageContent() {
                 const params = new URLSearchParams();
                 if (activeSector !== 'All') params.set('sector', activeSector);
                 if (activeVerification !== 'All') params.set('verification', activeVerification.toLowerCase());
-                if (searchQuery) params.set('search', searchQuery); // Assuming API supports search param? Not yet in route.ts but user might expect it.
-                // Note: route.ts currently filters by sector and verification. Search text support might be needed later.
+                if (searchQuery) params.set('search', searchQuery);
+
+                // Pagination
+                const limit = 10;
+                params.set('limit', limit.toString());
+                params.set('offset', ((page - 1) * limit).toString());
 
                 const res = await fetch(`/api/companies?${params.toString()}`);
                 if (!res.ok) throw new Error('Fetch failed');
@@ -50,8 +56,12 @@ function SearchPageContent() {
                 // Map API data to component props
                 if (json.data && Array.isArray(json.data)) {
                     setCompanies(json.data.map(mapCompanyToList));
+                    // Calculate total pages
+                    const total = json.meta?.total || 0;
+                    setTotalPages(Math.ceil(total / limit));
                 } else {
                     setCompanies([]);
+                    setTotalPages(0);
                 }
 
             } catch (err) {
@@ -63,7 +73,7 @@ function SearchPageContent() {
         }
 
         fetchResults();
-    }, [activeSector, activeVerification, searchQuery]);
+    }, [activeSector, activeVerification, searchQuery, page]);
 
 
     // Update URL helper
@@ -254,16 +264,39 @@ function SearchPageContent() {
                         )}
 
                         {/* Pagination (Visual) */}
-                        {!isLoading && companies.length > 0 && (
-                            <div className="mt-12 flex justify-center items-center gap-2">
-                                <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-all disabled:opacity-50" disabled>
+                        {!isLoading && companies.length > 0 && totalPages > 1 && (
+                            <div className="mt-12 flex justify-center items-center gap-2 flex-wrap">
+                                <button
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
                                     <ArrowRight size={16} className="rotate-180" />
                                 </button>
-                                <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/20">1</button>
-                                <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-all">2</button>
-                                <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-all">3</button>
-                                <span className="text-slate-300 font-bold px-2">...</span>
-                                <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">
+
+                                {Array.from({ length: Math.min(totalPages, 6) }, (_, i) => {
+                                    const p = i + 1;
+                                    return (
+                                        <button
+                                            key={p}
+                                            onClick={() => setPage(p)}
+                                            className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-all ${page === p
+                                                ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20'
+                                                : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                }`}
+                                        >
+                                            {p}
+                                        </button>
+                                    );
+                                })}
+
+                                {totalPages > 6 && <span className="text-slate-300 font-bold px-2">...</span>}
+
+                                <button
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
                                     <ArrowRight size={16} />
                                 </button>
                             </div>

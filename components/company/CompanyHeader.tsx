@@ -39,10 +39,10 @@ export default function CompanyHeader({ company, isInPipeline = false, onSaveNot
                     <div className="flex-1 flex gap-6 w-full">
                         {/* Logo */}
                         <div className="w-20 h-20 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-lg shadow-slate-200/50 overflow-hidden relative group">
-                            {company.logo_url ? (
+                            {false && company.logo_url ? (
                                 <img src={company.logo_url} alt={company.name} className="w-full h-full object-cover" />
                             ) : (
-                                <span className="text-3xl font-bold text-slate-400 group-hover:text-indigo-400 transition-colors">{company.name.charAt(0)}</span>
+                                <span className="text-3xl font-bold text-slate-400 group-hover:text-indigo-400 transition-colors">{company.name.slice(0, 2).toUpperCase()}</span>
                             )}
                         </div>
 
