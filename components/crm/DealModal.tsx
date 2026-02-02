@@ -175,6 +175,15 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
         id: deal.company_id
     };
 
+    const handleCall = () => {
+        window.open('https://zoom.us/start', '_blank');
+    };
+
+    const handleEmail = () => {
+        const domain = company.website?.replace(/^https?:\/\//, '').split('/')[0] || 'lemina.co';
+        window.location.href = `mailto:founders@${domain}`;
+    };
+
     const formatCurrency = (amount: number) => {
         if (amount >= 1000000) return `$${(amount / 1000000).toFixed(amount % 1000000 === 0 ? 0 : 1)}M`;
         if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}k`;
@@ -469,11 +478,17 @@ export default function DealModal({ deal, isOpen, onClose, onDealUpdate }: DealM
                                     </>
                                 ) : (
                                     <>
-                                        <button className="flex-none w-32 py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] bg-[var(--input-bg)] hover:bg-[var(--color-border)] rounded-xl transition-colors border border-[var(--color-border)]">
+                                        <button
+                                            onClick={handleEmail}
+                                            className="flex-none w-32 py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] bg-[var(--input-bg)] hover:bg-[var(--color-border)] rounded-xl transition-colors border border-[var(--color-border)]"
+                                        >
                                             <Mail size={18} className="text-[var(--color-text-secondary)]" /> Email
                                         </button>
-                                        <button className="flex-none w-32 py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] bg-[var(--input-bg)] hover:bg-[var(--color-border)] rounded-xl transition-colors border border-[var(--color-border)]">
-                                            <Phone size={18} className="text-[var(--color-text-secondary)]" /> Log Call
+                                        <button
+                                            onClick={handleCall}
+                                            className="flex-none w-32 py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] bg-[var(--input-bg)] hover:bg-[var(--color-border)] rounded-xl transition-colors border border-[var(--color-border)]"
+                                        >
+                                            <Phone size={18} className="text-[var(--color-text-secondary)]" /> Call
                                         </button>
 
                                         <a

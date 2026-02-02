@@ -7,7 +7,29 @@ import { Menu, Search, X } from 'lucide-react';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import BrandLogo from '@/components/ui/BrandLogo';
 
-export default function DashboardLayout({
+import { UserProvider, useUser } from '@/components/providers/UserProvider';
+
+function DashboardHeaderContent() {
+    const { profile } = useUser();
+
+    return (
+        <div className="flex items-center gap-6 ml-4">
+            <NotificationCenter />
+            <div className="h-6 w-px bg-[var(--color-border)]" />
+            <Link href="/dashboard/settings" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <div className="text-right hidden xl:block">
+                    <p className="text-sm font-medium text-white">{profile?.full_name || 'Loading...'}</p>
+                    <p className="text-xs text-[var(--color-text-secondary)]">{profile?.job_title || 'Wait...'}</p>
+                </div>
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 border border-[var(--color-border)] flex items-center justify-center text-white font-medium text-sm shadow-lg shadow-emerald-500/20">
+                    {profile?.full_name ? profile.full_name.substring(0, 2).toUpperCase() : 'OD'}
+                </div>
+            </Link>
+        </div>
+    );
+}
+
+function DashboardLayoutContent({
     children,
 }: {
     children: React.ReactNode;
@@ -35,8 +57,8 @@ export default function DashboardLayout({
                     </button>
                     <BrandLogo iconSize="w-6 h-6" textSize="text-lg" />
                 </div>
-                <div className="flex items-center gap-4"> {/* Added wrapper div for actions */}
-                    <NotificationCenter /> {/* Added NotificationCenter */}
+                <div className="flex items-center gap-4">
+                    <NotificationCenter />
                     <div className="w-8 h-8 rounded-full bg-[var(--color-accent-primary)] flex items-center justify-center text-sm font-bold text-white">
                         L
                     </div>
@@ -86,22 +108,20 @@ export default function DashboardLayout({
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-6 ml-4">
-                        <NotificationCenter />
-                        <div className="h-6 w-px bg-[var(--color-border)]" />
-                        <Link href="/dashboard/settings" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                            <div className="text-right hidden xl:block">
-                                <p className="text-sm font-medium text-white">Odinaka</p>
-                                <p className="text-xs text-[var(--color-text-secondary)]">Investor</p>
-                            </div>
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 border border-[var(--color-border)] flex items-center justify-center text-white font-medium text-sm shadow-lg shadow-emerald-500/20">
-                                OD
-                            </div>
-                        </Link>
-                    </div>
+
+                    {/* Dynamic Profile Section */}
+                    <DashboardHeaderContent />
                 </header>
                 {children}
             </main>
         </div>
+    );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <UserProvider>
+            <DashboardLayoutContent>{children}</DashboardLayoutContent>
+        </UserProvider>
     );
 }

@@ -52,28 +52,28 @@ export async function GET(request: Request) {
       slug: row.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), // Generate slug if missing
       website: row.website,
       logo_url: row.logo_url,
-      description_short: row.short_description,
+      description_short: row.short_description || row.description,
       sector: {
-        primary: row.sector,
-        sub_sector: row.sub_sector
+        primary: row.sector || row.industry,
+        sub_sector: row.sub_sector || row.industry
       },
       headquarters: {
-        city: row.headquarters ? row.headquarters.split(',')[0].trim() : null,
-        country: row.headquarters ? row.headquarters.split(',')[1]?.trim() : null,
-        country_code: 'NG' // Defaulting to NG for now, or infer from country name
+        city: (row.headquarters || row.location)?.split(',')[0].trim() || null,
+        country: (row.headquarters || row.location)?.split(',')[1]?.trim() || null,
+        country_code: 'NG'
       },
       verification: {
         overall_tier: row.verification_tier || (row.verification_status === 'verified' ? 5 : 1),
         tier_label: row.verification_status,
         data_quality_score: row.confidence_score || row.data_quality_score,
-        regulatory_status: row.verification_status === 'verified' ? 'Fully Licensed' : 'Pending Verification',
+        regulatory_status: row.verification_tier >= 4 ? 'Fully Licensed' : 'Pending Verification',
         confidence_score: row.confidence_score
       },
       key_metrics: {
-        funding_stage: row.funding_stage || (row.funding_rounds?.[0]?.round_name),
+        funding_stage: row.funding_stage || 'Unknown',
         total_funding_usd: row.total_funding_usd,
         team_size: row.team_size,
-        traction: row.data_quality_score > 70 ? "Verified Growth Metrics" : "Self-Reported Traction"
+        traction: (row.confidence_score || 0) > 80 ? "Verified Growth Metrics" : "Self-Reported Traction"
       },
       analysis: {
         market_opportunity: `High growth potential in African ${row.sector} market`,

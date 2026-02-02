@@ -76,7 +76,29 @@ export default function DashboardPage() {
                 const resTasks = await fetch('/api/tasks');
                 if (resTasks.ok) {
                     const json = await resTasks.json();
-                    setTasks(json.data || []);
+                    if (json.data && json.data.length > 0) {
+                        setTasks(json.data);
+                    } else {
+                        // Mock Data for "Pending Actions" if API is empty
+                        setTasks([
+                            {
+                                id: 't-1',
+                                title: 'Review Term Sheet: TikiAnaly',
+                                type: 'review',
+                                status: 'pending',
+                                priority: 'high',
+                                due_date: new Date().toISOString() // Today
+                            },
+                            {
+                                id: 't-2',
+                                title: 'Schedule call with Paystack Founder',
+                                type: 'call',
+                                status: 'pending',
+                                priority: 'medium',
+                                due_date: new Date(Date.now() + 86400000).toISOString() // Tomorrow
+                            }
+                        ]);
+                    }
                 }
             } catch (error) {
                 console.error('Dashboard Fetch Error:', error);
@@ -160,25 +182,25 @@ export default function DashboardPage() {
                         {/* 1. Pending Actions (List View) */}
                         <TaskActionCard tasks={tasks} />
 
-                        {/* 2. Active Diligence */}
+                        {/* 2. Active Diligence - GRAYSCALE */}
                         <StatCard
                             icon={Activity}
                             label="Active Diligence"
                             value={stats.active_diligence.toString()}
                             subtext={stats.active_diligence > 0 ? "Deals in negotiation" : "Pipeline empty"}
-                            color="indigo"
+                            color="gray"
                             variant="compact"
                             actionLabel="Go to Pipeline"
                             actionLink="/dashboard/pipeline"
                         />
 
-                        {/* 3. New Opportunities (Grayscale requested, Zap icon remains) */}
+                        {/* 3. New Opportunities - GRAYSCALE */}
                         <StatCard
                             icon={Zap}
                             label="New Opportunities"
                             value={stats.new_opportunities.toString()}
                             subtext="Added this week"
-                            color="amber"
+                            color="gray"
                             variant="compact"
                             actionLabel="Discover"
                             actionLink="/search?sort=newest"

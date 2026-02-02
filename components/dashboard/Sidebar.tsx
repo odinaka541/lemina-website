@@ -8,9 +8,9 @@ import {
     LineChart,
     Bell,
     Settings,
-    ShieldCheck,
     Users,
-    Globe
+    Globe,
+    CreditCard
 } from 'lucide-react';
 
 const navItems = [
@@ -107,23 +107,14 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
                 {/* Footer / Health */}
                 <div className="p-4 border-t border-[var(--color-border)]">
-                    <div className="bg-[rgba(16,185,129,0.05)] border border-[rgba(16,185,129,0.2)] rounded-lg p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                            <ShieldCheck size={16} className="text-[var(--color-accent-primary)]" />
-                            <span className="text-xs font-medium text-[var(--color-accent-primary)]">Account Health</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-white">92/100</span>
-                            <span className="text-xs text-[var(--color-text-secondary)]">Excellent</span>
-                        </div>
-                        <div className="w-full h-1 bg-[rgba(255,255,255,0.1)] rounded-full mt-2 overflow-hidden">
-                            <div className="h-full bg-[var(--color-accent-primary)] w-[92%]"></div>
-                        </div>
-                    </div>
-
-                    <button className="w-full mt-4 text-xs text-[var(--color-text-secondary)] hover:text-white transition-colors">
-                        Upgrade Plan
-                    </button>
+                    <Link
+                        href="/dashboard/settings"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--color-text-secondary)] hover:text-white hover:bg-[rgba(255,255,255,0.05)] transition-all"
+                        onClick={() => onClose?.()}
+                    >
+                        <CreditCard size={18} />
+                        Account Billing
+                    </Link>
                 </div>
             </aside>
         </>

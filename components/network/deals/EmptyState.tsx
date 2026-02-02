@@ -11,7 +11,8 @@ export default function EmptyState({ type, onClearFilters }: EmptyStateProps) {
             icon: Briefcase,
             title: "No Deals Yet",
             desc: "Deals shared with your network will appear here.",
-            action: "Share a Deal"
+            action: "Share a Deal",
+            onClick: undefined
         },
         no_match: {
             icon: Search,
@@ -24,7 +25,8 @@ export default function EmptyState({ type, onClearFilters }: EmptyStateProps) {
             icon: CheckCircle,
             title: "All Caught Up",
             desc: "No active deals at the moment. Check back soon.",
-            action: "View Closed Deals"
+            action: "View Closed Deals",
+            onClick: undefined
         }
     };
 

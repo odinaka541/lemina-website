@@ -47,6 +47,19 @@ export default function DealCard({ deal, index, onClick }: DealCardProps) {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
 
+    const handleCall = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        // Integration: Zoom / Teleconferencing
+        window.open('https://zoom.us/start', '_blank');
+    };
+
+    const handleEmail = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        // Integration: Email Platform
+        const domain = deal.website?.replace(/^https?:\/\//, '').split('/')[0] || 'lemina.co';
+        window.location.href = `mailto:founders@${domain}`;
+    };
+
     return (
         <Draggable draggableId={deal.id.toString()} index={index}>
             {(provided, snapshot) => (
@@ -139,10 +152,18 @@ export default function DealCard({ deal, index, onClick }: DealCardProps) {
                             <div className="hover:text-[var(--color-accent-primary)] cursor-pointer transition-colors" title="View Notes">
                                 <FileText size={16} />
                             </div>
-                            <div className="hover:text-[var(--color-accent-primary)] cursor-pointer transition-colors" title="Log Call">
+                            <div
+                                onClick={handleCall}
+                                className="hover:text-[var(--color-accent-primary)] cursor-pointer transition-colors"
+                                title="Schedule Call (Zoom)"
+                            >
                                 <Phone size={16} />
                             </div>
-                            <div className="hover:text-[var(--color-accent-primary)] cursor-pointer transition-colors" title="Send Email">
+                            <div
+                                onClick={handleEmail}
+                                className="hover:text-[var(--color-accent-primary)] cursor-pointer transition-colors"
+                                title="Send Email"
+                            >
                                 <Mail size={16} />
                             </div>
                         </div>

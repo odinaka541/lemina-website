@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Users } from 'lucide-react';
 
 // Components
 import ParamUrgentAttentionPanel from '@/components/network/UrgentAttentionPanel';
@@ -10,6 +10,7 @@ import ActiveDealsPreview from '@/components/network/ActiveDealsPreview';
 import NetworkMembersTable from '@/components/network/NetworkMembersTable';
 import NetworkIntelligencePanel from '@/components/network/NetworkIntelligencePanel';
 import NetworkActivityFeed from '@/components/network/NetworkActivityFeed';
+import InviteMemberModal from '@/components/network/InviteMemberModal';
 import { useToast } from '@/components/providers/ToastProvider';
 
 export default function NetworkPage() {
@@ -17,44 +18,47 @@ export default function NetworkPage() {
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
     const handleInvite = () => {
-        showToast("Invite Member modal would open here", "info");
+        setIsInviteModalOpen(true);
     };
 
     return (
-        <div className="container mx-auto px-4 pt-4 pb-24 space-y-10 max-w-[1600px]">
-            {/* 1. Page Header */}
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-6">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">My Network</h1>
-                    <p className="text-slate-500 font-medium">Manage your investment network and members.</p>
+        <div className="min-h-screen bg-slate-50/50 pb-24">
+            {/* Header - Glass Canopy */}
+            <div className="border-b border-slate-200 bg-white/50 backdrop-blur-sm">
+                <div className="container mx-auto px-6 py-8 pt-20 max-w-7xl">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-slate-900 tracking-tight font-sans">My Network</h1>
+                            <p className="text-sm text-slate-500 font-medium mt-1">Manage your connections and deal flow partners</p>
+                        </div>
+                    </div>
                 </div>
-                <button
-                    onClick={handleInvite}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-[#0F172A] hover:bg-[#1E293B] text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/10 transition-all active:scale-95"
-                >
-                    <UserPlus size={18} />
-                    Invite Member
-                </button>
-            </header>
+            </div>
 
-            {/* 2. Urgent Attention Panel */}
-            <ParamUrgentAttentionPanel />
+            <div className="container mx-auto px-6 py-8 space-y-8 max-w-7xl">
+                {/* 2. Urgent Attention Panel */}
+                <ParamUrgentAttentionPanel onInvite={handleInvite} />
 
-            {/* 3. Performance Dashboard */}
-            <PerformanceDashboard />
+                {/* 3. Performance Dashboard */}
+                <PerformanceDashboard />
 
-            {/* 4. Active Deals Preview */}
-            <ActiveDealsPreview />
+                {/* 4. Active Deals Preview */}
+                <ActiveDealsPreview />
 
-            {/* 5. Network Members Table */}
-            <NetworkMembersTable />
+                {/* 5. Network Members Table */}
+                <NetworkMembersTable onInvite={handleInvite} />
 
-            {/* 6. Network Intelligence Panel */}
-            <NetworkIntelligencePanel />
+                {/* 6. Network Intelligence Panel */}
+                <NetworkIntelligencePanel />
 
-            {/* 7. Network Activity Feed */}
-            <NetworkActivityFeed />
+                {/* 7. Network Activity Feed */}
+                <NetworkActivityFeed />
+            </div>
 
+            <InviteMemberModal
+                isOpen={isInviteModalOpen}
+                onClose={() => setIsInviteModalOpen(false)}
+            />
         </div>
     );
 }

@@ -16,8 +16,8 @@ export default function BillingTab() {
                     <div className="p-6 rounded-xl border border-emerald-200 bg-emerald-50/50">
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <h3 className="font-bold text-slate-900 text-lg">Pro Investor Plan</h3>
-                                <p className="text-sm text-slate-600">$49/month • Billed annually</p>
+                                <h3 className="font-bold text-slate-900 text-lg">Network Plan</h3>
+                                <p className="text-sm text-slate-600">$60/month • Billed monthly</p>
                             </div>
                             <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full uppercase tracking-wide">
                                 Active
@@ -79,9 +79,7 @@ export default function BillingTab() {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {[
-                                { date: 'Jan 01, 2026', amount: '$49.00', status: 'Paid' },
-                                { date: 'Dec 01, 2025', amount: '$49.00', status: 'Paid' },
-                                { date: 'Nov 01, 2025', amount: '$49.00', status: 'Paid' },
+                                { date: 'Jan 01, 2026', amount: '$60.00', status: 'Paid' }
                             ].map((row, i) => (
                                 <tr key={i} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="px-4 py-3 text-slate-900">{row.date}</td>

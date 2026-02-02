@@ -1,7 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['lemina.co'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lemina.co',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
   async redirects() {
     return [

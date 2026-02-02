@@ -55,7 +55,7 @@ export default function DealDetailPage({ params }: { params: { id: string } }) {
             {/* 3. Context Banner */}
             <NetworkContextBanner context={deal.network_context} />
 
-            {/* 4. Main Content - 3 Column Layout */}
+            {/* 4. Main Content - Left Sidebar + Main Area */}
             <main className="max-w-[1600px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
                 {/* Left Column (Terms & Docs) - 3 cols */}
@@ -64,18 +64,25 @@ export default function DealDetailPage({ params }: { params: { id: string } }) {
                     <DocumentsSection documents={deal.documents} />
                 </div>
 
-                {/* Center Column (Commitment & Discussion) - 6 cols */}
-                <div className="lg:col-span-6 space-y-6">
-                    <CommitmentTracker
-                        commitments={deal.commitments}
-                        onCommit={() => setIsCommitModalOpen(true)}
-                    />
-                    <DiscussionSection discussion={deal.discussion} />
-                </div>
+                {/* Main Content Area (Commitment, AI, Discussion) - 9 cols */}
+                <div className="lg:col-span-9 space-y-6">
 
-                {/* Right Column (AI) - 3 cols */}
-                <div className="lg:col-span-3">
-                    <AIAnalysisPanel analysis={deal.ai_analysis} />
+                    {/* Top Row: Commitment & AI */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2">
+                            <CommitmentTracker
+                                commitments={deal.commitments}
+                                onCommit={() => setIsCommitModalOpen(true)}
+                            />
+                        </div>
+                        <div className="lg:col-span-1">
+                            <AIAnalysisPanel analysis={deal.ai_analysis} />
+                        </div>
+                    </div>
+
+                    {/* Bottom Row: Discussion (Full Width) */}
+                    <DiscussionSection discussion={deal.discussion} />
+
                 </div>
 
             </main>

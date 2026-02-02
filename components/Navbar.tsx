@@ -1,17 +1,13 @@
-'use client';
-
+import { useState } from 'react';
 import Link from 'next/link';
-import { Home, Bell } from 'lucide-react';
+import { Home, Bell, Menu, X } from 'lucide-react';
+import BrandLogo from '@/components/ui/BrandLogo';
 
 export default function Navbar() {
     return (
         <nav className="flex justify-between items-center h-16 sticky top-4 z-50 backdrop-blur-xl border border-[var(--glass-border-color)] px-6 mx-4 rounded-2xl bg-[var(--nav-bg)] shadow-lg relative my-4 max-w-7xl lg:mx-auto">
             <div className="flex items-center gap-3">
-                <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    {/* Brand Logo - Simplified for internal apps */}
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold">L</div>
-                    <div className="font-semibold text-xl tracking-tight text-[var(--color-text-primary)]">Lemina</div>
-                </Link>
+                <BrandLogo textSize="text-xl" iconSize="w-8 h-8" className="!gap-3" />
             </div>
 
             {/* Right Actions */}

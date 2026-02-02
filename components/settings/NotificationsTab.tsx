@@ -136,7 +136,7 @@ export default function NotificationsTab({ initialData, onSave }: { initialData:
                         disabled={saving}
                         className="flex items-center gap-2 px-8 py-2.5 bg-slate-900 text-white rounded-xl font-medium shadow-sm hover:bg-slate-800 active:scale-[0.98] transition-all"
                     >
-                        {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                        {saving && <Loader2 size={18} className="animate-spin" />}
                         {saving ? 'Saving...' : 'Save Preferences'}
                     </button>
                 </div>

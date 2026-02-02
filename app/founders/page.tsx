@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import BrandLogo from '@/components/ui/BrandLogo';
+import PlusGridBackdrop from '@/components/landing/PlusGridBackdrop';
+import { Loader2, ArrowRight, CheckCircle2, Building, TrendingUp, DollarSign, Users } from 'lucide-react';
 
 interface FormData {
   companyName: string;
@@ -19,71 +21,44 @@ interface FormData {
   fundingStatus: string;
   totalFunding: string;
   investors: string;
-  raisingNow: string;
-  raiseAmount: string;
-  registered: string;
-  license_cbn: boolean;
-  license_sec: boolean;
-  license_naicom: boolean;
-  license_none: boolean;
   founderName: string;
   founderRole: string;
   founderEmail: string;
   founderLinkedIn: string;
   founderTwitter: string;
-  featureInReports: boolean;
-  shareWithInvestors: boolean;
-  notifyViewers: boolean;
-  quarterlyUpdates: boolean;
-  newsletter: boolean;
 }
 
-export default function FoundersPage() {
-  const [formData, setFormData] = useState<FormData>({
-    companyName: '',
-    website: '',
-    sector: '',
-    description: '',
-    foundedYear: '',
-    hqCity: '',
-    teamSize: '',
-    stage: '',
-    hasTraction: '',
-    keyMetric: '',
-    growthRate: '',
-    fundingStatus: '',
-    totalFunding: '',
-    investors: '',
-    raisingNow: '',
-    raiseAmount: '',
-    registered: '',
-    license_cbn: false,
-    license_sec: false,
-    license_naicom: false,
-    license_none: false,
-    founderName: '',
-    founderRole: '',
-    founderEmail: '',
-    founderLinkedIn: '',
-    founderTwitter: '',
-    featureInReports: true,
-    shareWithInvestors: true,
-    notifyViewers: true,
-    quarterlyUpdates: true,
-    newsletter: true
-  });
+const INITIAL_DATA: FormData = {
+  companyName: '',
+  website: '',
+  sector: '',
+  description: '',
+  foundedYear: '',
+  hqCity: '',
+  teamSize: '',
+  stage: '',
+  hasTraction: '',
+  keyMetric: '',
+  growthRate: '',
+  fundingStatus: '',
+  totalFunding: '',
+  investors: '',
+  founderName: '',
+  founderRole: '',
+  founderEmail: '',
+  founderLinkedIn: '',
+  founderTwitter: ''
+};
 
+export default function FoundersPage() {
+  const [formData, setFormData] = useState<FormData>(INITIAL_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({ ...prev, [name]: checked }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,19 +69,16 @@ export default function FoundersPage() {
     try {
       const response = await fetch('/api/submit-company', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Submission failed');
+        throw new Error('Submission failed');
       }
 
-      // redirect to thank you page on success
-      window.location.href = '/thank-you?company=' + encodeURIComponent(formData.companyName);
+      setIsSuccess(true);
+      window.scrollTo(0, 0);
     } catch (error: any) {
       setErrorMessage(error.message || 'An error occurred. Please try again.');
     } finally {
@@ -114,424 +86,257 @@ export default function FoundersPage() {
     }
   };
 
-  return (
-    <>
-      <div className="container" style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-          <div style={{ display: 'inline-flex', marginBottom: '40px' }}>
-            <BrandLogo />
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen relative flex flex-col overflow-hidden bg-[var(--color-bg-primary)]">
+        <PlusGridBackdrop />
+        <div className="flex-1 flex items-center justify-center relative z-10 px-6">
+          <div className="glass-panel p-12 text-center max-w-lg mx-auto animate-in fade-in zoom-in duration-500">
+            <div className="w-20 h-20 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
+              <CheckCircle2 size={40} />
+            </div>
+            <h2 className="text-3xl font-light mb-4">Submission Received</h2>
+            <p className="text-[var(--color-text-secondary)] text-lg mb-8">
+              Thank you adding <strong>{formData.companyName}</strong>. Our intelligence team will verify your data within 48 hours.
+            </p>
+            <Link href="/" className="btn btn-primary inline-flex items-center gap-2">
+              Back to Knowledge Base <ArrowRight size={18} />
+            </Link>
           </div>
+        </div>
+      </div>
+    );
+  }
 
-          <h1 className="text-gradient" style={{ fontSize: '3.5rem', marginBottom: '20px' }}>Add Your Company</h1>
-          <h2 style={{ fontSize: '1.5rem', color: 'var(--color-accent-primary)', fontWeight: 500, marginBottom: '16px' }}>
-            Get discovered by investors actively deploying capital
-          </h2>
-          <p style={{ fontSize: '1.125rem', maxWidth: '700px', margin: '0 auto', color: 'var(--color-text-secondary)' }}>
-            Featured in intelligence reports. Connected to active VCs. Free company profile in our verified database.
+  return (
+    <div className="min-h-screen relative bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+      <PlusGridBackdrop />
+
+      <div className="max-w-4xl mx-auto px-6 py-20 relative z-10">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <Link href="/" className="inline-block mb-10 hover:opacity-80 transition-opacity">
+            <BrandLogo />
+          </Link>
+          <h1 className="text-5xl md:text-6xl font-light mb-6 tracking-tight">
+            Add your company to <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">the intelligence network</span>
+          </h1>
+          <p className="text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto font-light">
+            Get discovered by 100+ vetted investors actively deploying capital in African markets.
           </p>
         </div>
 
-        {/* Benefits */}
-        <div className="glass-panel" style={{ padding: '40px', marginBottom: '60px' }}>
-          <h3 style={{ fontSize: '1.75rem', marginBottom: '24px', color: 'var(--color-accent-primary)' }}>Why Add Your Company?</h3>
-          <ul style={{ listStyle: 'none', display: 'grid', gap: '16px' }}>
-            {[
-              "Get discovered by VCs and angel investors actively looking for deals",
-              "Featured in our intelligence reports read by 100+ investors",
-              "Free company profile in our verified database",
-              "Potential warm introductions to investors searching for what you're building",
-              "Quarterly reminders to keep your profile fresh and discoverable"
-            ].map((benefit, index) => (
-              <li key={index} style={{ display: 'flex', alignItems: 'start', gap: '12px', fontSize: '1rem', color: 'var(--color-text-secondary)' }}>
-                <span style={{ color: 'var(--color-accent-primary)', fontWeight: 'bold' }}>✓</span>
-                {benefit}
-              </li>
-            ))}
-          </ul>
+        {/* Benefits Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          {[
+            { icon: Users, title: "VC Visibility", desc: "Direct exposure to active funds" },
+            { icon: TrendingUp, title: "Verified Profile", desc: "Build trust with validated data" },
+            { icon: DollarSign, title: "Deal Flow", desc: "Inbound interest from investors" }
+          ].map((item, i) => (
+            <div key={i} className="glass-panel p-6 flex flex-col items-center text-center">
+              <item.icon className="w-8 h-8 text-[var(--color-accent-primary)] mb-4" />
+              <h3 className="font-medium mb-1">{item.title}</h3>
+              <p className="text-sm text-[var(--color-text-secondary)]">{item.desc}</p>
+            </div>
+          ))}
         </div>
 
         {/* Form */}
-        <div className="glass-panel" style={{ padding: '40px' }}>
+        <div className="glass-panel p-8 md:p-12 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-700">
           {errorMessage && (
-            <div style={{
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#FCA5A5',
-              padding: '16px',
-              borderRadius: '8px',
-              marginBottom: '24px'
-            }}>
+            <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm">
               {errorMessage}
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            {/* SECTION 1: COMPANY BASICS */}
-            <div style={{ marginBottom: '48px' }}>
-              <h3 style={{
-                fontSize: '1.5rem',
-                marginBottom: '24px',
-                color: 'var(--color-accent-primary)',
-                paddingBottom: '12px',
-                borderBottom: '1px solid rgba(16, 185, 129, 0.2)'
-              }}>
-                1. Company Basics
-              </h3>
+          <form onSubmit={handleSubmit} className="space-y-12">
 
-              <div className="form-group">
-                <label htmlFor="companyName">Company Name <span style={{ color: '#EF4444' }}>*</span></label>
-                <input
-                  type="text"
-                  id="companyName"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleInputChange}
-                  required
-                />
+            {/* Section 1 */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-[var(--glass-border-color)]">
+                <div className="w-8 h-8 rounded-full bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] flex items-center justify-center font-mono text-sm">01</div>
+                <h3 className="text-xl font-light">Company Basics</h3>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="website">Website <span style={{ color: '#EF4444' }}>*</span></label>
-                <input
-                  type="url"
-                  id="website"
-                  name="website"
-                  value={formData.website}
-                  onChange={handleInputChange}
-                  placeholder="https://yourcompany.com"
-                  required
-                />
-                <p style={{ fontSize: '0.875rem', marginTop: '8px', color: 'var(--color-text-secondary)' }}>Include https://</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-secondary)]">Company Name *</label>
+                  <input name="companyName" value={formData.companyName} onChange={handleInputChange} required className="input-field w-full" placeholder="Acme Inc" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-secondary)]">Website *</label>
+                  <input name="website" type="url" value={formData.website} onChange={handleInputChange} required className="input-field w-full" placeholder="https://" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-secondary)]">Headquarters *</label>
+                  <input name="hqCity" value={formData.hqCity} onChange={handleInputChange} required className="input-field w-full" placeholder="Lagos, Nigeria" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-secondary)]">Founded Year *</label>
+                  <input name="foundedYear" type="number" min="2010" max="2026" value={formData.foundedYear} onChange={handleInputChange} required className="input-field w-full" placeholder="2024" />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="sector">Primary Sector <span style={{ color: '#EF4444' }}>*</span></label>
-                <select
-                  id="sector"
-                  name="sector"
-                  value={formData.sector}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select sector...</option>
-                  <option value="payments">Payments & Processing</option>
-                  <option value="lending">Lending & Credit</option>
-                  <option value="neobank">Digital Banking / Neobank</option>
-                  <option value="infrastructure">Financial Infrastructure / APIs</option>
-                  <option value="wealthtech">Wealth Management / Investment</option>
-                  <option value="insurtech">Insurance Technology</option>
-                  <option value="regtech">Regulatory Technology</option>
-                  <option value="other-fintech">Other Fintech</option>
-                  <option value="healthtech">Healthtech</option>
-                  <option value="edtech">Edtech</option>
-                  <option value="agritech">Agritech</option>
-                  <option value="logistics">Logistics</option>
-                  <option value="ecommerce">E-commerce</option>
-                  <option value="other">Other</option>
-                </select>
-                <p style={{ fontSize: '0.875rem', marginTop: '8px', color: 'var(--color-text-secondary)' }}>We focus on fintech but track all Nigerian tech</p>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[var(--color-text-secondary)]">One-line Description *</label>
+                <input name="description" value={formData.description} onChange={handleInputChange} required maxLength={120} className="input-field w-full" placeholder="e.g. B2B payments infrastructure for emerging markets" />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="description">One-line Description <span style={{ color: '#EF4444' }}>*</span></label>
-                <input
-                  type="text"
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="e.g., B2B payment infrastructure for SMEs"
-                  required
-                  maxLength={120}
-                />
-                <p style={{ fontSize: '0.875rem', marginTop: '8px', color: 'var(--color-text-secondary)' }}>What you build, for whom - max 120 characters</p>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="foundedYear">Founded Year <span style={{ color: '#EF4444' }}>*</span></label>
-                <input
-                  type="number"
-                  id="foundedYear"
-                  name="foundedYear"
-                  value={formData.foundedYear}
-                  onChange={handleInputChange}
-                  placeholder="2024"
-                  min="2010"
-                  max="2025"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="hqCity">Headquarters <span style={{ color: '#EF4444' }}>*</span></label>
-                <input
-                  type="text"
-                  id="hqCity"
-                  name="hqCity"
-                  value={formData.hqCity}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Lagos, Nigeria"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="teamSize">Team Size <span style={{ color: '#EF4444' }}>*</span></label>
-                <select
-                  id="teamSize"
-                  name="teamSize"
-                  value={formData.teamSize}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select range...</option>
-                  <option value="1-5">1-5 people</option>
-                  <option value="6-10">6-10 people</option>
-                  <option value="11-25">11-25 people</option>
-                  <option value="26-50">26-50 people</option>
-                  <option value="51-100">51-100 people</option>
-                  <option value="100+">100+ people</option>
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-secondary)]">Sector *</label>
+                  <select name="sector" value={formData.sector} onChange={handleInputChange} required className="input-field w-full bg-[#0A0F1E]"> {/* Hardcode bg for select */}
+                    <option value="">Select...</option>
+                    <option value="Fintech">Fintech</option>
+                    <option value="Healthtech">Healthtech</option>
+                    <option value="Logistics">Logistics</option>
+                    <option value="Agtech">Agtech</option>
+                    <option value="Cleantech">Cleantech</option>
+                    <option value="E-commerce">E-commerce</option>
+                    <option value="Edtech">Edtech</option>
+                    <option value="Proptech">Proptech</option>
+                    <option value="Mobility">Mobility</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-secondary)]">Team Size *</label>
+                  <select name="teamSize" value={formData.teamSize} onChange={handleInputChange} required className="input-field w-full bg-[#0A0F1E]">
+                    <option value="">Select...</option>
+                    <option value="1-5">1-5</option>
+                    <option value="6-10">6-10</option>
+                    <option value="11-25">11-25</option>
+                    <option value="26-50">26-50</option>
+                    <option value="50+">50+</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* SECTION 2: TRACTION & METRICS */}
-            <div style={{ marginBottom: '48px' }}>
-              <h3 style={{
-                fontSize: '1.5rem',
-                marginBottom: '24px',
-                color: 'var(--color-accent-primary)',
-                paddingBottom: '12px',
-                borderBottom: '1px solid rgba(16, 185, 129, 0.2)'
-              }}>
-                2. Traction & Metrics
-              </h3>
-
-              <div className="form-group">
-                <label htmlFor="stage">Current Stage <span style={{ color: '#EF4444' }}>*</span></label>
-                <select
-                  id="stage"
-                  name="stage"
-                  value={formData.stage}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select stage...</option>
-                  <option value="idea">Idea / Pre-product</option>
-                  <option value="mvp">MVP / Beta</option>
-                  <option value="pre-revenue">Live Product / Pre-revenue</option>
-                  <option value="revenue">Generating Revenue</option>
-                  <option value="scaling">Scaling / Growth</option>
-                </select>
+            {/* Section 2 */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-[var(--glass-border-color)]">
+                <div className="w-8 h-8 rounded-full bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] flex items-center justify-center font-mono text-sm">02</div>
+                <h3 className="text-xl font-light">Traction & Funding</h3>
               </div>
 
-              <div className="form-group">
-                <label>Do you have traction? <span style={{ color: '#EF4444' }}>*</span></label>
-                <div className="radio-group">
-                  <label className="radio-label">
-                    <input
-                      type="radio"
-                      name="hasTraction"
-                      value="yes"
-                      checked={formData.hasTraction === 'yes'}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    Yes - we have users/revenue
-                  </label>
-                  <label className="radio-label">
-                    <input
-                      type="radio"
-                      name="hasTraction"
-                      value="no"
-                      checked={formData.hasTraction === 'no'}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    No - still building
-                  </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-secondary)]">Current Stage *</label>
+                  <select name="stage" value={formData.stage} onChange={handleInputChange} required className="input-field w-full bg-[#0A0F1E]">
+                    <option value="">Select...</option>
+                    <option value="Pre-Seed">Pre-Seed</option>
+                    <option value="Seed">Seed</option>
+                    <option value="Series A">Series A</option>
+                    <option value="Series B+">Series B+</option>
+                  </select>
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-secondary)]">Funding Status *</label>
+                  <select name="fundingStatus" value={formData.fundingStatus} onChange={handleInputChange} required className="input-field w-full bg-[#0A0F1E]">
+                    <option value="">Select...</option>
+                    <option value="Bootstrapped">Bootstrapped</option>
+                    <option value="Raised Pre-Seed">Raised Pre-Seed</option>
+                    <option value="Raised Seed">Raised Seed</option>
+                    <option value="Raising Now">Raising Now</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[var(--color-text-secondary)]">Do you have traction? *</label>
+                <select name="hasTraction" value={formData.hasTraction} onChange={handleInputChange} required className="input-field w-full bg-[#0A0F1E]">
+                  <option value="">Select...</option>
+                  <option value="yes">Yes, generating revenue/users</option>
+                  <option value="no">No, pre-product/pre-revenue</option>
+                </select>
               </div>
 
               {formData.hasTraction === 'yes' && (
-                <div className="form-group">
-                  <label htmlFor="keyMetric">Key Metric <span style={{ color: 'var(--color-text-secondary)', fontWeight: 400, fontSize: '0.875rem' }}>(optional but recommended)</span></label>
-                  <input
-                    type="text"
-                    id="keyMetric"
-                    name="keyMetric"
-                    value={formData.keyMetric}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 10,000 active users OR $50k MRR OR ₦1B monthly GMV"
-                  />
-                  <p style={{ fontSize: '0.875rem', marginTop: '8px', color: 'var(--color-text-secondary)' }}>Your most impressive number - helps investors discover you</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--color-text-secondary)]">Key Metric</label>
+                    <input name="keyMetric" value={formData.keyMetric} onChange={handleInputChange} className="input-field w-full" placeholder="e.g. $50k MRR" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--color-text-secondary)]">MoM Growth</label>
+                    <input name="growthRate" value={formData.growthRate} onChange={handleInputChange} className="input-field w-full" placeholder="e.g. 15%" />
+                  </div>
                 </div>
               )}
-
-              <div className="form-group">
-                <label htmlFor="growthRate">Growth Rate (last 3 months) <span style={{ color: 'var(--color-text-secondary)', fontWeight: 400, fontSize: '0.875rem' }}>(optional)</span></label>
-                <select
-                  id="growthRate"
-                  name="growthRate"
-                  value={formData.growthRate}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select range...</option>
-                  <option value="negative">Negative / Flat</option>
-                  <option value="0-10">0-10% monthly</option>
-                  <option value="10-20">10-20% monthly</option>
-                  <option value="20-50">20-50% monthly</option>
-                  <option value="50+">50%+ monthly</option>
-                </select>
-              </div>
             </div>
 
-            {/* SECTION 3: FUNDING */}
-            <div style={{ marginBottom: '48px' }}>
-              <h3 style={{
-                fontSize: '1.5rem',
-                marginBottom: '24px',
-                color: 'var(--color-accent-primary)',
-                paddingBottom: '12px',
-                borderBottom: '1px solid rgba(16, 185, 129, 0.2)'
-              }}>
-                3. Funding
-              </h3>
-
-              <div className="form-group">
-                <label htmlFor="fundingStatus">Funding Status <span style={{ color: '#EF4444' }}>*</span></label>
-                <select
-                  id="fundingStatus"
-                  name="fundingStatus"
-                  value={formData.fundingStatus}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select status...</option>
-                  <option value="bootstrapped">Bootstrapped / Self-funded</option>
-                  <option value="friends-family">Friends & Family</option>
-                  <option value="pre-seed">Pre-seed</option>
-                  <option value="seed">Seed</option>
-                  <option value="series-a">Series A</option>
-                  <option value="series-b+">Series B+</option>
-                  <option value="raising">Currently Raising</option>
-                </select>
+            {/* Section 3 */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-[var(--glass-border-color)]">
+                <div className="w-8 h-8 rounded-full bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] flex items-center justify-center font-mono text-sm">03</div>
+                <h3 className="text-xl font-light">Founder Contact</h3>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="totalFunding">Total Funding Raised <span style={{ color: 'var(--color-text-secondary)', fontWeight: 400, fontSize: '0.875rem' }}>(optional)</span></label>
-                <select
-                  id="totalFunding"
-                  name="totalFunding"
-                  value={formData.totalFunding}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select range...</option>
-                  <option value="0">$0 (Bootstrapped)</option>
-                  <option value="1-50k">$1k - $50k</option>
-                  <option value="50-250k">$50k - $250k</option>
-                  <option value="250k-1m">$250k - $1M</option>
-                  <option value="1-5m">$1M - $5M</option>
-                  <option value="5m+">$5M+</option>
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-secondary)]">Full Name *</label>
+                  <input name="founderName" value={formData.founderName} onChange={handleInputChange} required className="input-field w-full" placeholder="Jane Doe" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-secondary)]">Role *</label>
+                  <input name="founderRole" value={formData.founderRole} onChange={handleInputChange} required className="input-field w-full" placeholder="CEO / Co-founder" />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="investors">Key Investors <span style={{ color: 'var(--color-text-secondary)', fontWeight: 400, fontSize: '0.875rem' }}>(optional)</span></label>
-                <input
-                  type="text"
-                  id="investors"
-                  name="investors"
-                  value={formData.investors}
-                  onChange={handleInputChange}
-                  placeholder="e.g., TLcom Capital, Partech Africa"
-                />
-                <p style={{ fontSize: '0.875rem', marginTop: '8px', color: 'var(--color-text-secondary)' }}>If you've raised from notable VCs, list them</p>
-              </div>
-            </div>
-
-            {/* SECTION 4: FOUNDER INFO */}
-            <div style={{ marginBottom: '48px' }}>
-              <h3 style={{
-                fontSize: '1.5rem',
-                marginBottom: '24px',
-                color: 'var(--color-accent-primary)',
-                paddingBottom: '12px',
-                borderBottom: '1px solid rgba(16, 185, 129, 0.2)'
-              }}>
-                4. Founder Info
-              </h3>
-
-              <div className="form-group">
-                <label htmlFor="founderName">Founder Name <span style={{ color: '#EF4444' }}>*</span></label>
-                <input
-                  type="text"
-                  id="founderName"
-                  name="founderName"
-                  value={formData.founderName}
-                  onChange={handleInputChange}
-                  required
-                />
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[var(--color-text-secondary)]">Work Email *</label>
+                <input name="founderEmail" type="email" value={formData.founderEmail} onChange={handleInputChange} required className="input-field w-full" placeholder="jane@company.com" />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="founderRole">Role <span style={{ color: '#EF4444' }}>*</span></label>
-                <input
-                  type="text"
-                  id="founderRole"
-                  name="founderRole"
-                  value={formData.founderRole}
-                  onChange={handleInputChange}
-                  placeholder="e.g., CEO, CTO"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="founderEmail">Work Email <span style={{ color: '#EF4444' }}>*</span></label>
-                <input
-                  type="email"
-                  id="founderEmail"
-                  name="founderEmail"
-                  value={formData.founderEmail}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="founderLinkedIn">LinkedIn Profile <span style={{ color: '#EF4444' }}>*</span></label>
-                <input
-                  type="url"
-                  id="founderLinkedIn"
-                  name="founderLinkedIn"
-                  value={formData.founderLinkedIn}
-                  onChange={handleInputChange}
-                  placeholder="https://linkedin.com/in/..."
-                  required
-                />
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[var(--color-text-secondary)]">LinkedIn Profile *</label>
+                <input name="founderLinkedIn" type="url" value={formData.founderLinkedIn} onChange={handleInputChange} required className="input-field w-full" placeholder="https://linkedin.com/in/..." />
               </div>
             </div>
 
             <button
               type="submit"
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '16px', fontSize: '1.125rem' }}
               disabled={isSubmitting}
+              className="w-full btn btn-primary py-4 rounded-lg flex items-center justify-center gap-2 text-lg font-medium disabled:opacity-70 disabled:cursor-not-allowed group transition-all"
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Company'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  Submit to Intelligence Network
+                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
           </form>
         </div>
-
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '60px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '40px' }}>
-          <Link href="/" style={{ color: 'var(--color-accent-primary)', textDecoration: 'none', fontSize: '1rem' }}>
-            &larr; Back to Homepage
-          </Link>
-        </div>
       </div>
-    </>
+
+      {/* Global Style Override for Inputs (if not already in globals.css) */}
+      <style jsx global>{`
+        .input-field {
+            background-color: var(--color-bg-secondary);
+            border: 1px solid var(--glass-border-color);
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.75rem 1rem; /* py-3 px-4 */
+            color: var(--color-text-primary);
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+        .input-field::placeholder {
+            color: var(--color-text-secondary);
+            opacity: 0.5;
+        }
+      `}</style>
+    </div>
   );
 }

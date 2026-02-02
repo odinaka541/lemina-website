@@ -102,8 +102,8 @@ export default function ProfileTab({ initialData, onSave }: { initialData: any, 
                                     type="button"
                                     onClick={() => handleCheckboxChange('investment_sectors', sector)}
                                     className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${(formData.investment_sectors || []).includes(sector)
-                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
                                         }`}
                                 >
                                     {sector}
@@ -121,8 +121,8 @@ export default function ProfileTab({ initialData, onSave }: { initialData: any, 
                                     type="button"
                                     onClick={() => handleCheckboxChange('investment_stages', stage)}
                                     className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${(formData.investment_stages || []).includes(stage)
-                                            ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
                                         }`}
                                 >
                                     {stage}
@@ -140,8 +140,8 @@ export default function ProfileTab({ initialData, onSave }: { initialData: any, 
                                     type="button"
                                     onClick={() => handleCheckboxChange('investment_geo', geo)}
                                     className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${(formData.investment_geo || []).includes(geo)
-                                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
                                         }`}
                                 >
                                     {geo}
@@ -190,7 +190,7 @@ export default function ProfileTab({ initialData, onSave }: { initialData: any, 
                         disabled={saving}
                         className="flex items-center gap-2 px-8 py-2.5 bg-slate-900 text-white rounded-xl font-medium shadow-sm hover:bg-slate-800 active:scale-[0.98] transition-all"
                     >
-                        {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                        {saving && <Loader2 size={18} className="animate-spin" />}
                         {saving ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>

@@ -1,83 +1,145 @@
 'use client';
 
-import React from 'react';
+import Link from 'next/link';
 import BrandLogo from '@/components/ui/BrandLogo';
-import { Twitter, Mail, Sun, Moon } from 'lucide-react';
+import { Twitter } from 'lucide-react';
 
 export default function Footer() {
-    const toggleTheme = () => {
-        const newTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', newTheme);
-    };
-
     return (
-        <footer className="py-20 border-t border-[var(--color-border)] bg-[var(--card-bg)]/50 backdrop-blur-md text-[var(--color-text-primary)] relative z-10">
-            <div className="max-w-7xl mx-auto px-6">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-20">
-                    {/* Left Side: Navigation Columns (Span 7) */}
-                    <div className="lg:col-span-7 grid grid-cols-2 md:grid-cols-3 gap-8">
+        <footer className="border-t border-[var(--glass-border-color)] bg-[var(--nav-bg)]/50 backdrop-blur-xl mt-20">
+            <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
+                    {/* Brand Column */}
+                    <div className="md:col-span-4">
+                        <div className="mb-6">
+                            <BrandLogo />
+                        </div>
+                        <p className="text-[var(--color-text-primary)] font-medium mb-1">
+                            Powering African Investments
+                        </p>
+                        <a href="mailto:admin@lemina.co" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors block mb-6">
+                            admin@lemina.co
+                        </a>
+
+                        <div className="space-y-4">
+                            <p className="text-xs text-[var(--color-text-secondary)] font-semibold uppercase tracking-wider">Language</p>
+                            <div className="flex gap-4 text-sm text-[var(--color-text-secondary)]">
+                                <span className="text-[var(--color-text-primary)] font-medium">English (UK)</span>
+                                <span className="opacity-50">Português</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Links Columns */}
+                    <div className="md:col-span-5 grid grid-cols-2 md:grid-cols-3 gap-8">
                         <div>
-                            <h4 className="font-semibold mb-6">Company</h4>
-                            <ul className="space-y-4 text-[var(--color-text-secondary)] text-sm">
-                                <li><a href="#" className="hover:text-[var(--color-accent-primary)] transition-colors">About</a></li>
-                                <li><a href="mailto:odinaka@lemina.co" className="hover:text-[var(--color-accent-primary)] transition-colors">Contact</a></li>
-                                <li><a href="mailto:admin@lemina.co" className="hover:text-[var(--color-accent-primary)] transition-colors">Log In</a></li>
+                            <h4 className="font-semibold text-[var(--color-text-primary)] mb-6">Company</h4>
+                            <ul className="space-y-4 text-sm">
+                                <li>
+                                    <Link href="#" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        About
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="mailto:odinaka@lemina.co" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        Contact
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="#" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        Careers
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="#" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        Log In
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
+
                         <div>
-                            <h4 className="font-semibold mb-6">Platform</h4>
-                            <ul className="space-y-4 text-[var(--color-text-secondary)] text-sm">
-                                <li><a href="#" className="hover:text-[var(--color-accent-primary)] transition-colors">Intelligence</a></li>
-                                <li><a href="#" className="hover:text-[var(--color-accent-primary)] transition-colors">Dealroom</a></li>
-                                <li><a href="#" className="hover:text-[var(--color-accent-primary)] transition-colors">Networks</a></li>
+                            <h4 className="font-semibold text-[var(--color-text-primary)] mb-6">Platform</h4>
+                            <ul className="space-y-4 text-sm">
+                                <li>
+                                    <Link href="#" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        Intelligence
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="#" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        Deal Flow
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="#" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        Networks
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="#" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        Documentation
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
+
                         <div>
-                            <h4 className="font-semibold mb-6">Resources</h4>
-                            <ul className="space-y-4 text-[var(--color-text-secondary)] text-sm">
-                                <li><a href="#" className="hover:text-[var(--color-accent-primary)] transition-colors">Blog</a></li>
-                                <li><a href="#" className="hover:text-[var(--color-accent-primary)] transition-colors">Sample Report</a></li>
+                            <h4 className="font-semibold text-[var(--color-text-primary)] mb-6">Resources</h4>
+                            <ul className="space-y-4 text-sm">
+                                <li>
+                                    <Link href="#" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        Blog
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="#" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        Sample Report
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="#" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        Help Center
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="#" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                                        Case Studies
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
                     </div>
 
-                    {/* Right Side: Large Brand (Span 5) */}
-                    <div className="lg:col-span-5 lg:text-right flex flex-col items-start lg:items-end">
-                        {/* Huge Brand Text with Logo */}
-                        <div className="mb-6 scale-125 origin-top-left lg:origin-top-right">
-                            <BrandLogo textSize="text-6xl" iconSize="w-12 h-12" />
-                        </div>
-
-                        <div className="text-[var(--color-text-secondary)] text-sm leading-relaxed max-w-xs text-left lg:text-right mb-8">
-                            Powering African Investments.<br />
-                            <br />
-                            <a href="mailto:admin@lemina.co" className="hover:text-[var(--color-text-primary)]">admin@lemina.co</a>
-                        </div>
-
-                        <div className="flex flex-col items-start lg:items-end gap-3">
-                            <div className="flex items-center gap-2 text-[var(--color-text-primary)] text-sm border border-[var(--color-border)] rounded-full px-3 py-1 bg-[var(--card-bg)]">
-                                <span>English (UK)</span>
-                            </div>
-                            <button className="flex items-center gap-2 text-[var(--color-text-secondary)] text-sm border border-transparent hover:border-[var(--color-border)] rounded-full px-3 py-1 transition-all opacity-60 hover:opacity-100">
-                                <span>Português</span>
+                    {/* Newsletter */}
+                    <div className="md:col-span-3">
+                        <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Stay informed</h4>
+                        <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                            Monthly insights on African tech and private markets
+                        </p>
+                        <div className="flex flex-col gap-2">
+                            <input
+                                type="email"
+                                placeholder="Your email address"
+                                className="w-full bg-white/5 border border-[var(--glass-border-color)] rounded-lg px-4 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                            />
+                            <button className="w-full bg-[var(--color-primary)] text-white font-medium py-2 rounded-lg hover:bg-[var(--color-primary)]/90 transition-colors text-sm">
+                                Subscribe
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Bottom Bar */}
-                <div className="pt-8 border-t border-[var(--color-border)] flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[var(--color-text-secondary)]">
-                    <p>© 2025 Lemina Inc.</p>
-                    <div className="flex gap-6 items-center">
-                        <button onClick={toggleTheme} className="hover:text-[var(--color-text-primary)] transition-colors" aria-label="Toggle Theme">
-                            <Sun className="h-4 w-4 hidden [html[data-theme='light']_&]:block" />
-                            <Moon className="h-4 w-4 block [html[data-theme='light']_&]:hidden" />
-                        </button>
-                        <a href="https://x.com/uselemina" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-text-primary)] transition-colors" aria-label="Twitter">
-                            <Twitter className="h-4 w-4" />
-                        </a>
-                        <a href="#" className="hover:text-[var(--color-text-primary)]">Privacy Policy</a>
-                        <a href="#" className="hover:text-[var(--color-text-primary)]">Terms of Use</a>
+                <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-[var(--glass-border-color)]">
+                    <p className="text-sm text-[var(--color-text-secondary)] mb-4 md:mb-0">
+                        © 2026 Lemina Inc.
+                    </p>
+                    <div className="flex items-center gap-6 text-sm text-[var(--color-text-secondary)]">
+                        <Link href="#" className="hover:text-[var(--color-text-primary)] transition-colors">Privacy Policy</Link>
+                        <Link href="#" className="hover:text-[var(--color-text-primary)] transition-colors">Terms of Use</Link>
+                        <div className="flex gap-4 ml-4">
+                            <a href="#" className="hover:text-[var(--color-text-primary)] transition-colors"><Twitter size={18} /></a>
+                        </div>
                     </div>
                 </div>
             </div>

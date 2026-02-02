@@ -52,11 +52,9 @@ export default function PerformanceDashboard() {
             value: formatCurrency(data.capital_deployed),
             subtext: [
                 `+ ${formatCurrency(data.committed_pending)} Committed (Pending)`,
-                `= ${formatCurrency(data.capital_deployed + data.committed_pending)} Total Exposure`
+                `Total Exposure: ${formatCurrency(data.capital_deployed + data.committed_pending)}`
             ],
             icon: DollarSign,
-            color: 'text-emerald-600',
-            bg: 'bg-emerald-50 border-emerald-100'
         },
         {
             label: 'Active Deals',
@@ -66,8 +64,6 @@ export default function PerformanceDashboard() {
                 `Avg 8 days to fill`
             ],
             icon: Briefcase,
-            color: 'text-blue-600',
-            bg: 'bg-blue-50 border-blue-100'
         },
         {
             label: 'Avg Commitment',
@@ -76,9 +72,7 @@ export default function PerformanceDashboard() {
                 'Range: $5k - $75k',
                 'Median: $20k'
             ],
-            icon: Users, // Using Users for "Avg Commitment per Member" concept
-            color: 'text-purple-600',
-            bg: 'bg-purple-50 border-purple-100'
+            icon: Users,
         },
         {
             label: 'Participation Rate',
@@ -88,34 +82,32 @@ export default function PerformanceDashboard() {
                 `Industry avg: ${data.industry_avg_participation}%`
             ],
             icon: Activity,
-            color: data.participation_rate > 40 ? 'text-emerald-600' : 'text-amber-600',
-            bg: data.participation_rate > 40 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'
         }
     ];
 
     return (
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {cards.map((card, i) => (
-                <div key={i} className={`p-5 rounded-2xl border ${card.bg} relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300`}>
-                    <div className="flex justify-between items-start mb-3">
-                        <div className={`p-3 rounded-xl bg-white shadow-sm ${card.color}`}>
+                <div key={i} className="group relative bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-[0_8px_30px_-4px_rgba(16,24,40,0.08)] transition-all duration-300">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 shadow-sm group-hover:bg-slate-200 transition-colors duration-300">
                             <card.icon size={22} />
                         </div>
                         {/* Decorative Background Icon */}
                         <card.icon
-                            size={100}
-                            className={`absolute -right-6 -bottom-6 opacity-5 rotate-12 ${card.color}`}
+                            size={120}
+                            className="absolute -right-6 -bottom-6 opacity-[0.05] rotate-12 group-hover:rotate-0 transition-transform duration-500 text-slate-900 pointer-events-none"
                         />
                     </div>
 
-                    <div>
-                        <p className="text-sm font-semibold text-slate-500 mb-1">{card.label}</p>
-                        <h3 className="text-3xl font-bold text-slate-900 tracking-tight mb-3">{card.value}</h3>
+                    <div className="relative z-10">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{card.label}</p>
+                        <h3 className="text-3xl font-bold text-slate-900 tracking-tight font-sans mb-4">{card.value}</h3>
 
-                        <div className="space-y-1">
+                        <div className="space-y-1.5 pt-4 border-t border-slate-50">
                             {card.subtext.map((line, idx) => (
-                                <p key={idx} className="text-xs font-medium text-slate-600 flex items-center gap-1.5">
-                                    <span className="w-1 h-1 rounded-full bg-slate-400"></span>
+                                <p key={idx} className="text-xs font-medium text-slate-500 flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
                                     {line}
                                 </p>
                             ))}

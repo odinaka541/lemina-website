@@ -92,16 +92,22 @@ export default function QuickCommitModal({ isOpen, onClose, deal }: QuickCommitM
                         <form onSubmit={handleSubmit} className="p-6 space-y-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-slate-700">Commitment Amount</label>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-medium text-slate-400">$</span>
-                                    <input
-                                        type="number"
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        placeholder={`${deal.min_ticket}`}
-                                        className="w-full pl-8 pr-4 py-3 text-lg font-semibold border-2 border-slate-200 rounded-xl focus:border-indigo-600 focus:ring-0 outline-none transition-all placeholder:text-slate-300"
-                                        autoFocus
-                                    />
+                                <div className="flex gap-3">
+                                    <div className="w-14 h-14 bg-slate-50 border-2 border-slate-100 rounded-xl flex items-center justify-center text-xl font-bold text-slate-400 shrink-0">
+                                        $
+                                    </div>
+                                    <div className="flex-1">
+                                        <input
+                                            type="number"
+                                            value={amount}
+                                            onChange={(e) => setAmount(e.target.value)}
+                                            placeholder={`${deal.min_ticket}`}
+                                            min="0"
+                                            step="100"
+                                            className="w-full h-14 px-4 text-lg font-bold border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all placeholder:text-slate-300"
+                                            autoFocus
+                                        />
+                                    </div>
                                 </div>
                                 <div className="flex justify-between text-xs font-medium text-slate-500 px-1">
                                     <span>Min: ${deal.min_ticket.toLocaleString()}</span>
@@ -109,19 +115,11 @@ export default function QuickCommitModal({ isOpen, onClose, deal }: QuickCommitM
                                 </div>
                             </div>
 
-                            <div className="bg-slate-50 p-4 rounded-xl space-y-3">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-600">Processing Fee (2%)</span>
-                                    <span className="font-medium text-slate-900">
-                                        ${amount ? (parseFloat(amount) * 0.02).toLocaleString() : '0.00'}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between text-sm pt-3 border-t border-slate-200">
-                                    <span className="text-slate-600 font-bold">Total Wire</span>
-                                    <span className="font-bold text-lg text-emerald-600">
-                                        ${amount ? (parseFloat(amount) * 1.02).toLocaleString() : '0.00'}
-                                    </span>
-                                </div>
+                            <div className="bg-slate-50 p-6 rounded-2xl flex justify-between items-center border border-slate-100">
+                                <span className="text-slate-600 font-bold">Total Commitment</span>
+                                <span className="font-bold text-2xl text-emerald-600 tracking-tight">
+                                    ${amount ? parseFloat(amount).toLocaleString() : '0.00'}
+                                </span>
                             </div>
 
                             <button

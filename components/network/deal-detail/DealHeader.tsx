@@ -21,10 +21,7 @@ export default function DealHeader({ company, urgency }: DealHeaderProps) {
 
                         <div className="flex flex-wrap items-center gap-2">
                             {company.verification_tier >= 3 && (
-                                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
-                                    <ShieldCheck size={12} className="fill-emerald-100" />
-                                    TIER {company.verification_tier} VERIFIED
-                                </span>
+                                <div className="h-1.5 w-12 bg-emerald-500 rounded-full" title={`Verified Tier ${company.verification_tier}`} />
                             )}
                             <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-100">
                                 {company.stage}
@@ -36,8 +33,8 @@ export default function DealHeader({ company, urgency }: DealHeaderProps) {
                 {/* Right: Actions & Urgency */}
                 <div className="flex flex-col items-end gap-4 w-full md:w-auto">
                     <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${urgency.days_remaining <= 5
-                            ? 'bg-amber-50 border-amber-100 text-amber-800'
-                            : 'bg-slate-50 border-slate-100 text-slate-600'
+                        ? 'bg-amber-50 border-amber-100 text-amber-800'
+                        : 'bg-slate-50 border-slate-100 text-slate-600'
                         }`}>
                         <Clock size={18} />
                         <span className="font-bold">{urgency.days_remaining} days left</span>

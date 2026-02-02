@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock, AlertCircle, AlertTriangle, CheckCircle, X, ArrowRight, UserCheck } from 'lucide-react';
+import { Clock, AlertCircle, AlertTriangle, CheckCircle, X, ArrowRight, UserCheck, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
@@ -15,7 +15,11 @@ interface Alert {
     link: string;
 }
 
-export default function UrgentAttentionPanel() {
+interface UrgentAttentionPanelProps {
+    onInvite?: () => void;
+}
+
+export default function UrgentAttentionPanel({ onInvite }: UrgentAttentionPanelProps) {
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [visible, setVisible] = useState(true);
 
@@ -32,7 +36,7 @@ export default function UrgentAttentionPanel() {
         setAlerts(prev => prev.filter(a => a.id !== id));
     };
 
-    if (alerts.length === 0) return null;
+    if (alerts.length === 0 && !onInvite) return null;
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -54,10 +58,22 @@ export default function UrgentAttentionPanel() {
 
     return (
         <section className="space-y-4">
-            <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                <AlertCircle size={14} className="text-amber-500" />
-                Urgent Attention
-            </h3>
+            <div className="flex justify-between items-center">
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                    <AlertCircle size={14} className="text-amber-500" />
+                    Urgent Attention
+                </h3>
+
+                {onInvite && (
+                    <button
+                        onClick={onInvite}
+                        className="group flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wide rounded-lg shadow-sm transition-all active:scale-95"
+                    >
+                        <UserPlus size={14} className="text-slate-400 group-hover:text-white transition-colors" />
+                        Invite Member
+                    </button>
+                )}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <AnimatePresence>
@@ -67,7 +83,7 @@ export default function UrgentAttentionPanel() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className={`relative p-4 rounded-xl border shadow-sm flex items-start gap-4 ${getColors(alert.type, alert.severity)}`}
+                            className={`relative p-4 rounded-xl border shadow-sm flex items-start gap-4 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${getColors(alert.type, alert.severity)}`}
                         >
                             <div className="mt-1 p-1.5 bg-white/50 rounded-lg">
                                 {getIcon(alert.type)}

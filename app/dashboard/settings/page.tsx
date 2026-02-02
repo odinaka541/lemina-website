@@ -9,8 +9,11 @@ import SecurityTab from '@/components/settings/SecurityTab';
 import BillingTab from '@/components/settings/BillingTab';
 import DataPrivacyTab from '@/components/settings/DataPrivacyTab';
 
+import { useUser } from '@/components/providers/UserProvider';
+
 export default function SettingsPage() {
     const { showToast } = useToast();
+    const { refreshProfile } = useUser(); // Hook to update global state
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('profile');
     const [formData, setFormData] = useState({
@@ -41,7 +44,6 @@ export default function SettingsPage() {
             const res = await fetch('/api/settings/profile');
             const json = await res.json();
             if (json.data) {
-                // Merge data, but also handle nulls gracefully by defaulting to empty strings
                 setFormData(prev => ({
                     ...prev,
                     full_name: json.data.full_name || '',
@@ -49,7 +51,6 @@ export default function SettingsPage() {
                     company_name: json.data.company_name || '',
                     bio: json.data.bio || '',
                     email_notifications: json.data.email_notifications ?? true,
-                    // New fields
                     investment_sectors: json.data.investment_sectors || [],
                     investment_stages: json.data.investment_stages || [],
                     investment_geo: json.data.investment_geo || [],
@@ -71,17 +72,32 @@ export default function SettingsPage() {
     };
 
     const handleSave = async (data: any) => {
-        // Optimistic update
         setFormData(data);
+
+        // Sanitize data: Postgres Time/Numeric columns hate empty strings ""
+        const payload = {
+            ...data,
+            dnd_start_time: data.dnd_start_time === '' ? null : data.dnd_start_time,
+            dnd_end_time: data.dnd_end_time === '' ? null : data.dnd_end_time,
+            digest_time: data.digest_time === '' ? null : data.digest_time,
+            min_check_size: data.min_check_size === '' ? null : data.min_check_size,
+            max_check_size: data.max_check_size === '' ? null : data.max_check_size,
+        };
 
         const res = await fetch('/api/settings/profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(payload)
         });
 
-        if (!res.ok) throw new Error('Failed to save');
-        // Let the child component handle success toast
+        if (!res.ok) {
+            const errBody = await res.json();
+            console.error('Save failed details:', errBody);
+            throw new Error(errBody.error || 'Failed to save');
+        }
+
+        // Update global user context immediately
+        await refreshProfile();
     };
 
     if (loading) {
@@ -97,39 +113,72 @@ export default function SettingsPage() {
     ];
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-5xl">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Settings</h1>
-            <p className="text-slate-500 mb-8">Manage your account preferences and investment profile.</p>
-
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                {/* Sidebar Navigation */}
-                <div className="space-y-2">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`w-full text-left px-4 py-3 rounded-xl font-medium flex items-center gap-3 transition-all ${activeTab === tab.id
-                                ? 'bg-slate-900 text-white shadow-sm'
-                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                                }`}
-                        >
-                            <tab.icon size={18} className={activeTab === tab.id ? 'text-emerald-400' : 'text-slate-400'} />
-                            {tab.label}
-                        </button>
-                    ))}
+        <div className="min-h-screen bg-slate-50/50 pb-32">
+            {/* Header - Glass Canopy */}
+            <div className="border-b border-slate-200 bg-white/50 backdrop-blur-sm">
+                <div className="container mx-auto px-6 py-8 pt-20 max-w-6xl">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold text-slate-900 tracking-tight font-sans">Settings & Preferences</h1>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <a
+                                href="mailto:admin@lemina.co"
+                                className="text-xs font-bold text-slate-500 hover:text-slate-900 px-4 py-2 uppercase tracking-wide transition-colors"
+                            >
+                                Help Center
+                            </a>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                {/* Main Content */}
-                <div className="lg:col-span-3">
-                    {activeTab === 'profile' && (
-                        <ProfileTab initialData={formData} onSave={handleSave} />
-                    )}
-                    {activeTab === 'notifications' && (
-                        <NotificationsTab initialData={formData} onSave={handleSave} />
-                    )}
-                    {activeTab === 'security' && <SecurityTab />}
-                    {activeTab === 'billing' && <BillingTab />}
-                    {activeTab === 'data' && <DataPrivacyTab />}
+            <div className="container mx-auto px-6 py-8 max-w-6xl">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                    {/* Sidebar Navigation */}
+                    <div className="lg:col-span-3 space-y-2 sticky top-32 self-start">
+                        <div className="mb-4 px-2">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Account</p>
+                        </div>
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`w-full group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-300 border ${activeTab === tab.id
+                                    ? 'bg-white border-indigo-100 shadow-md shadow-indigo-500/5 text-indigo-700'
+                                    : 'bg-transparent border-transparent text-slate-500 hover:bg-white hover:border-slate-100 hover:text-slate-900'
+                                    }`}
+                            >
+                                <div className={`p-1.5 rounded-lg transition-colors ${activeTab === tab.id
+                                    ? 'bg-indigo-50 text-indigo-600'
+                                    : 'bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-slate-600'
+                                    }`}>
+                                    <tab.icon size={16} strokeWidth={2.5} />
+                                </div>
+                                {tab.label}
+                                {activeTab === tab.id && (
+                                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="lg:col-span-9">
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {activeTab === 'profile' && (
+                                <ProfileTab initialData={formData} onSave={handleSave} />
+                            )}
+                            {activeTab === 'notifications' && (
+                                <NotificationsTab initialData={formData} onSave={handleSave} />
+                            )}
+                            {activeTab === 'security' && <SecurityTab />}
+                            {activeTab === 'billing' && <BillingTab />}
+                            {activeTab === 'data' && <DataPrivacyTab />}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

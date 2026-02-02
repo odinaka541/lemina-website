@@ -85,7 +85,7 @@ export default function SecurityTab() {
                             <div className="flex items-center gap-4">
                                 <Smartphone size={20} className="text-slate-400" />
                                 <div>
-                                    <div className="font-medium text-slate-900">Safari on iPhone 15 Pro</div>
+                                    <div className="font-medium text-slate-900">Chrome on Samsung S10</div>
                                     <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
                                         <Globe size={10} /> London, UK • 2 days ago
                                     </div>

@@ -12,10 +12,27 @@ interface AISidePanelProps {
 
 export default function AISidePanel({ analysis, companyName, className = '', companyId }: AISidePanelProps) {
     const [activeTab, setActiveTab] = useState<'memo' | 'summary' | 'chat'>('memo');
+    const [hasGenerated, setHasGenerated] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [loadingStep, setLoadingStep] = useState('Initializing...');
     const [chatInput, setChatInput] = useState('');
     const [chatHistory, setChatHistory] = useState([
         { role: 'ai', text: `Hi! I've analyzed ${companyName}. Ask me anything about their market, risks, or competition.` }
     ]);
+
+    const handleGenerate = () => {
+        setIsGenerating(true);
+        setLoadingStep('Gathering public data...');
+
+        setTimeout(() => setLoadingStep('Analyzing market structure...'), 800);
+        setTimeout(() => setLoadingStep('Extracting key risks...'), 1600);
+        setTimeout(() => setLoadingStep('Drafting investment memo...'), 2400);
+
+        setTimeout(() => {
+            setIsGenerating(false);
+            setHasGenerated(true);
+        }, 3200);
+    };
 
     const router = useRouter(); // Initialize router
 
@@ -85,49 +102,85 @@ export default function AISidePanel({ analysis, companyName, className = '', com
 
                 {/* TAB: MEMO */}
                 {activeTab === 'memo' && (
-                    <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="flex-1 p-6">
-                            {/* Markdown Styling */}
-                            <div className="prose prose-sm prose-slate max-w-none 
-                                prose-headings:font-bold prose-headings:text-slate-900 prose-headings:mb-3 prose-headings:mt-6
-                                prose-p:text-slate-600 prose-p:leading-7 prose-p:mb-4 prose-p:text-[13px]
-                                prose-strong:text-slate-800 prose-strong:font-bold
-                                prose-ul:my-4 prose-ul:list-disc prose-ul:pl-4
-                                prose-li:text-slate-600 prose-li:text-[13px] prose-li:mb-1
-                                marker:text-indigo-400
-                            ">
-                                <ReactMarkdown
-                                    components={{
-                                        h1: ({ node, ...props }) => <h1 className="text-xl border-b border-slate-100 pb-2 mb-4" {...props} />,
-                                        h2: ({ node, ...props }) => <h2 className="text-sm uppercase tracking-wider text-slate-500 font-bold border-l-4 border-indigo-500 pl-3 mt-8 mb-4" {...props} />,
-                                        h3: ({ node, ...props }) => <h3 className="text-sm font-bold text-slate-900 mt-6 mb-2" {...props} />,
-                                        ul: ({ node, ...props }) => <ul className="space-y-2 my-4" {...props} />,
-                                        li: ({ node, ...props }) => (
-                                            <li className="flex gap-2 text-[13px] text-slate-600 leading-relaxed">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2 shrink-0 opacity-60"></div>
-                                                <span>{props.children}</span>
-                                            </li>
-                                        )
-                                    }}
+                    <div className="flex flex-col h-full">
+                        {!hasGenerated && !isGenerating ? (
+                            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in duration-500">
+                                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 shadow-xl shadow-indigo-100/50 flex items-center justify-center mb-6 relative group">
+                                    <div className="absolute inset-0 bg-indigo-500/5 blur-xl rounded-full group-hover:bg-indigo-500/10 transition-all duration-500"></div>
+                                    <Sparkles size={32} className="text-indigo-600 relative z-10" />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-900 mb-2">Generate Investment Memo</h3>
+                                <p className="text-sm text-slate-500 max-w-[240px] mb-8 leading-relaxed">
+                                    Analyze <span className="font-semibold text-slate-700">{companyName}</span>'s market position, risks, and upside potential.
+                                </p>
+                                <button
+                                    onClick={handleGenerate}
+                                    className="group relative px-8 py-3 bg-[#0F172A] hover:bg-[#1E293B] text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-900/20 hover:shadow-indigo-900/30 hover:scale-[1.02] transition-all duration-300"
                                 >
-                                    {analysis?.investment_memo || ''}
-                                </ReactMarkdown>
+                                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/0 via-white/10 to-indigo-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                                    <div className="flex items-center gap-2">
+                                        <Sparkles size={16} />
+                                        <span>Generate Analysis</span>
+                                    </div>
+                                </button>
                             </div>
-                        </div>
+                        ) : isGenerating ? (
+                            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300">
+                                <div className="relative mb-6">
+                                    <div className="w-16 h-16 rounded-full border-4 border-slate-100 border-t-indigo-600 animate-spin"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <Zap size={20} className="text-indigo-600 fill-indigo-600 animate-pulse" />
+                                    </div>
+                                </div>
+                                <h4 className="text-sm font-bold text-slate-900 mb-1">{loadingStep}</h4>
+                                <p className="text-xs text-slate-500">This usually takes about 10 seconds...</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
+                                    {/* Markdown Styling */}
+                                    <div className="prose prose-sm prose-slate max-w-none 
+                                        prose-headings:font-bold prose-headings:text-slate-900 prose-headings:mb-3 prose-headings:mt-6
+                                        prose-p:text-slate-600 prose-p:leading-7 prose-p:mb-4 prose-p:text-[13px]
+                                        prose-strong:text-slate-800 prose-strong:font-bold
+                                        prose-ul:my-4 prose-ul:list-disc prose-ul:pl-4
+                                        prose-li:text-slate-600 prose-li:text-[13px] prose-li:mb-1
+                                        marker:text-indigo-400
+                                    ">
+                                        <ReactMarkdown
+                                            components={{
+                                                h1: ({ node, ...props }) => <h1 className="text-xl border-b border-slate-100 pb-2 mb-4" {...props} />,
+                                                h2: ({ node, ...props }) => <h2 className="text-sm uppercase tracking-wider text-slate-500 font-bold border-l-4 border-indigo-500 pl-3 mt-8 mb-4" {...props} />,
+                                                h3: ({ node, ...props }) => <h3 className="text-sm font-bold text-slate-900 mt-6 mb-2" {...props} />,
+                                                ul: ({ node, ...props }) => <ul className="space-y-2 my-4" {...props} />,
+                                                li: ({ node, ...props }) => (
+                                                    <li className="flex gap-2 text-[13px] text-slate-600 leading-relaxed">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2 shrink-0 opacity-60"></div>
+                                                        <span>{props.children}</span>
+                                                    </li>
+                                                )
+                                            }}
+                                        >
+                                            {analysis?.investment_memo || ''}
+                                        </ReactMarkdown>
+                                    </div>
+                                </div>
 
-                        {/* Sticky Footer Actions */}
-                        <div className="p-4 border-t border-slate-100 bg-slate-50/50 backdrop-blur-sm sticky bottom-0">
-                            <div className="flex gap-3">
-                                <button className="flex-1 py-2.5 flex items-center justify-center gap-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 hover:border-slate-300 shadow-sm transition-all group">
-                                    <Download size={14} className="text-slate-400 group-hover:text-slate-600" />
-                                    Download PDF
-                                </button>
-                                <button className="flex-1 py-2.5 flex items-center justify-center gap-2 bg-[#0F172A] border border-transparent rounded-xl text-xs font-bold text-white hover:bg-[#1E293B] shadow-lg shadow-slate-900/10 transition-all">
-                                    <Share2 size={14} />
-                                    Share Memo
-                                </button>
+                                {/* Sticky Footer Actions */}
+                                <div className="p-4 border-t border-slate-100 bg-slate-50/50 backdrop-blur-sm sticky bottom-0 shrink-0">
+                                    <div className="flex gap-3">
+                                        <button className="flex-1 py-2.5 flex items-center justify-center gap-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 hover:border-slate-300 shadow-sm transition-all group">
+                                            <Download size={14} className="text-slate-400 group-hover:text-slate-600" />
+                                            Download PDF
+                                        </button>
+                                        <button className="flex-1 py-2.5 flex items-center justify-center gap-2 bg-[#0F172A] border border-transparent rounded-xl text-xs font-bold text-white hover:bg-[#1E293B] shadow-lg shadow-slate-900/10 transition-all">
+                                            <Share2 size={14} />
+                                            Share Memo
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 )}
 

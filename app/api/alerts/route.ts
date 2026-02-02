@@ -22,13 +22,13 @@ export async function GET() {
 
             if (users && users.length > 0) {
                 userId = users[0].id;
-                console.log('GET /api/alerts: Using Fallback User ID:', userId);
+
             } else {
                 console.error('GET /api/alerts: No users found for fallback');
                 return NextResponse.json({ error: 'Unauthorized: No users found' }, { status: 401 });
             }
         } else {
-            console.log('GET /api/alerts: Using Authenticated User ID:', userId);
+
         }
 
         let { data, error } = await supabase
@@ -37,7 +37,7 @@ export async function GET() {
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
 
-        console.log(`GET /api/alerts: Found ${data?.length || 0} alerts for user ${userId}`);
+
 
         // Retry with admin client if RLS fails (returns empty or error) for fallback user
         if ((error || !data || data.length === 0) && userId !== user?.id) {

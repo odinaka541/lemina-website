@@ -42,7 +42,7 @@ export interface Investment {
     ownership_percentage?: number;
 
     // Current Status
-    current_valuation: number;
+    current_value: number;
     status: 'active' | 'at_risk' | 'exited' | 'monitoring';
     ai_health_score?: number; // 0-100
 

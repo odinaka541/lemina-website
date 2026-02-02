@@ -115,8 +115,8 @@ export default function PortfolioTable({ investments }: PortfolioTableProps) {
                                 </td>
                                 <td className="p-4 text-center">
                                     <div className="flex items-center justify-center gap-2" title={`${inv.ai_health_score}/100`}>
-                                        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${inv.ai_health_score >= 80 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
-                                            inv.ai_health_score >= 60 ? 'bg-amber-50 border-amber-100 text-amber-700' :
+                                        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${(inv.ai_health_score || 0) >= 80 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                                            (inv.ai_health_score || 0) >= 60 ? 'bg-amber-50 border-amber-100 text-amber-700' :
                                                 'bg-red-50 border-red-100 text-red-700'}`}>
                                             <Activity size={12} strokeWidth={2.5} />
                                             <span className="text-xs font-bold">{inv.ai_health_score || '--'}</span>

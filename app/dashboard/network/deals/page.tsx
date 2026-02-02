@@ -59,14 +59,13 @@ export default function DealFlowPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-slate-50/50 pb-24">
             {/* Header */}
-            <div className="border-b border-slate-200">
-                <div className="container mx-auto px-4 py-6 max-w-[1400px]">
+            <div className="border-b border-slate-200 bg-white/50 backdrop-blur-sm">
+                <div className="container mx-auto px-6 py-8 pt-20 max-w-[1400px]">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Network Deal Flow</h1>
-                            <p className="text-slate-500 font-medium mt-1">Review and commit to deals shared with your network.</p>
+                            <h1 className="text-3xl font-bold text-slate-900 tracking-tight font-sans">Network Deal Flow</h1>
                         </div>
                         <DealFilters filters={filters} onFilterChange={handleFilterChange} />
                     </div>

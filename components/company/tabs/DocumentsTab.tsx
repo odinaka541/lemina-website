@@ -159,7 +159,7 @@ export default function DocumentsTab({ investmentId, companyId }: DocumentsTabPr
                 onClose={() => setIsUploadOpen(false)}
                 onSuccess={(newDoc) => {
                     setDocuments([newDoc, ...documents]);
-                    if (newDoc.file_path) handleAnalyize(newDoc.id); // Auto-analyze new docs
+                    if (newDoc.url) handleAnalyize(newDoc.id); // Auto-analyze new docs
                 }}
                 investmentId={investmentId}
                 companyId={companyId}

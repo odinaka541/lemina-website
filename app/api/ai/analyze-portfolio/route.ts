@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import pdf from 'pdf-parse';
+const pdf = require('pdf-parse');
 import { Investment } from '@/lib/types';
 
 // Initialize Groq Client

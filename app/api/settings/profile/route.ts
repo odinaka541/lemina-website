@@ -10,17 +10,25 @@ const supabase = createClient(
 
 // Helper to get a valid user ID for the demo
 // In production, this would strictly use supabase.auth.getUser()
+// Helper to get a valid user ID for the demo
 async function getDemoUserId() {
-    // 1. Try to find any profile
-    const { data } = await supabase
+    // 1. Try to find any existing profile
+    const { data: profile } = await supabase
         .from('profiles')
         .select('id')
         .limit(1)
-        .single();
+        .maybeSingle();
 
-    if (data) return data.id;
+    if (profile) return profile.id;
 
-    // 2. Fallback (this might fail if no users exist, but better than hardcoded 000)
+    // 2. If no profile, find ANY user from Auth to create a profile for
+    const { data: { users }, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1 });
+
+    if (users && users.length > 0) {
+        return users[0].id;
+    }
+
+    // 3. Last resort fallback (Likely to fail FK constraints, but prevents crash)
     return '00000000-0000-0000-0000-000000000000';
 }
 
@@ -59,6 +67,8 @@ export async function POST(request: Request) {
         const body = await request.json();
         const userId = await getDemoUserId();
 
+
+
         // Upsert profile for the demo user
         const { data, error } = await supabase
             .from('profiles')
@@ -71,14 +81,19 @@ export async function POST(request: Request) {
             .single();
 
         if (error) {
-            console.error('Profile update error:', error);
-            return NextResponse.json({ error: error.message }, { status: 500 });
+            console.error('API: Profile update FAILED:', error);
+            console.error('API: Error Details:', JSON.stringify(error, null, 2));
+            return NextResponse.json({
+                error: error.message,
+                details: error
+            }, { status: 500 });
         }
+
 
         return NextResponse.json({ data });
 
     } catch (err) {
-        console.error('Profile update server error:', err);
+        console.error('API: Profile update SERVER ERROR:', err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

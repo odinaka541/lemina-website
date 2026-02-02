@@ -45,7 +45,7 @@ export default function DealCard({ deal, onCommit }: DealCardProps) {
 
     return (
         <article
-            className={`group bg-white rounded-2xl border transition-all duration-300 relative flex flex-col hover:shadow-lg ${isClosingSoon && !isFilled && !isClosed ? 'border-amber-200 shadow-amber-100 hover:border-amber-300' : 'border-slate-200 hover:border-slate-300'
+            className={`group bg-white rounded-2xl border transition-all duration-300 relative flex flex-col hover:shadow-xl hover:-translate-y-1 shadow-sm ${isClosingSoon && !isFilled && !isClosed ? 'border-amber-200 shadow-amber-100 hover:border-amber-300' : 'border-slate-200 hover:border-slate-300'
                 } ${isClosed ? 'opacity-75 grayscale' : ''}`}
         >
             {/* Header Section */}
@@ -59,9 +59,7 @@ export default function DealCard({ deal, onCommit }: DealCardProps) {
                         <h3 className="text-xl font-bold text-slate-900 leading-tight mb-0.5">{deal.company.name}</h3>
                         <p className="text-sm text-slate-500 line-clamp-1">{deal.company.description}</p>
                         {deal.company.verification_tier >= 3 && (
-                            <div className="flex items-center gap-1 mt-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full w-fit">
-                                <ShieldCheck size={10} /> VERIFIED TIER {deal.company.verification_tier}
-                            </div>
+                            <div className="h-1.5 w-12 bg-emerald-500 rounded-full mt-2" title={`Verified Tier ${deal.company.verification_tier}`} />
                         )}
                     </div>
                 </div>
@@ -87,7 +85,7 @@ export default function DealCard({ deal, onCommit }: DealCardProps) {
             </div>
 
             {/* Terms Grid */}
-            <div className="p-5 grid grid-cols-2 gap-y-4 gap-x-8">
+            <div className="p-5 grid grid-cols-3 gap-y-4 gap-x-4">
                 <div>
                     <span className="block text-xs font-medium text-slate-400 mb-0.5">Valuation</span>
                     <span className="text-sm font-bold text-slate-900">{formatMoney(deal.valuation)} {deal.valuation_type}</span>
@@ -95,10 +93,6 @@ export default function DealCard({ deal, onCommit }: DealCardProps) {
                 <div>
                     <span className="block text-xs font-medium text-slate-400 mb-0.5">Type</span>
                     <span className="text-sm font-bold text-slate-900">{deal.deal_type}</span>
-                </div>
-                <div>
-                    <span className="block text-xs font-medium text-slate-400 mb-0.5">Lead Investor</span>
-                    <span className="text-sm font-bold text-slate-900 truncate" title={deal.lead_investor}>{deal.lead_investor}</span>
                 </div>
                 <div>
                     <span className="block text-xs font-medium text-slate-400 mb-0.5">Ownership</span>
