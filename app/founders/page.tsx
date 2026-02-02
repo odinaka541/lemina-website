@@ -123,19 +123,18 @@ export default function FoundersPage() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">the intelligence network</span>
           </h1>
           <p className="text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto font-light">
-            Get discovered by 100+ vetted investors actively deploying capital in African markets.
+            Get discovered by investors actively deploying capital in African markets.
           </p>
         </div>
 
         {/* Benefits Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           {[
-            { icon: Users, title: "VC Visibility", desc: "Direct exposure to active funds" },
-            { icon: TrendingUp, title: "Verified Profile", desc: "Build trust with validated data" },
-            { icon: DollarSign, title: "Deal Flow", desc: "Inbound interest from investors" }
+            { title: "VC Visibility", desc: "Direct exposure to active funds" },
+            { title: "Verified Profile", desc: "Build trust with validated data" },
+            { title: "Deal Flow", desc: "Inbound interest from investors" }
           ].map((item, i) => (
             <div key={i} className="glass-panel p-6 flex flex-col items-center text-center">
-              <item.icon className="w-8 h-8 text-[var(--color-accent-primary)] mb-4" />
               <h3 className="font-medium mb-1">{item.title}</h3>
               <p className="text-sm text-[var(--color-text-secondary)]">{item.desc}</p>
             </div>
