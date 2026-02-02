@@ -12,7 +12,9 @@ import CreateAlertModal from '@/components/alerts/CreateAlertModal';
 import { useToast } from '@/components/providers/ToastProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function AlertsPage() {
+import { Suspense } from 'react';
+
+function AlertsContent() {
     const { showToast } = useToast();
     const searchParams = useSearchParams();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -346,5 +348,13 @@ export default function AlertsPage() {
                 />
             )}
         </div>
+    );
+}
+
+export default function AlertsPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-slate-50/50 flex items-center justify-center"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>}>
+            <AlertsContent />
+        </Suspense>
     );
 }
