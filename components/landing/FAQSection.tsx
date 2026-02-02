@@ -99,6 +99,7 @@ export default function FAQSection() {
                             {faqs.map((faq, index) => (
                                 <FAQItem
                                     key={index}
+                                    index={index}
                                     item={faq}
                                     isOpen={openIndex === index}
                                     onClick={() => setOpenIndex(openIndex === index ? null : index)}
