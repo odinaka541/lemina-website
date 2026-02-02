@@ -2,6 +2,15 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // DEMO MODE: Bypass all auth checks for performance
+  return NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  // ORIGINAL LOGIC (Commented out for Demo)
+  /*
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -70,7 +79,7 @@ export async function middleware(request: NextRequest) {
   // Redirect Logic
   if (isProtectedRoute && !user) {
     // If accessing protected route without user, redirect to login
-    // return NextResponse.redirect(new URL('/auth', request.url)) // DISABLED FOR DEMO MOCK
+    return NextResponse.redirect(new URL('/auth', request.url))
   }
 
   if (isAuthRoute && user && !request.nextUrl.pathname.startsWith('/auth/callback')) {
@@ -80,6 +89,7 @@ export async function middleware(request: NextRequest) {
   }
 
   return response
+  */
 }
 
 export const config = {
