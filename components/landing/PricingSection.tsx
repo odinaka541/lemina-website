@@ -83,7 +83,7 @@ export default function PricingSection() {
         },
         {
             name: "Solo Investor",
-            price: "$89",
+            price: "$199",
             description: "Full power of Lemina for the independent investor.",
             features: [
                 "Everything in Basic",
@@ -101,7 +101,7 @@ export default function PricingSection() {
         },
         {
             name: "Network",
-            price: "$59",
+            price: "$129",
             subPrice: "per member (minimum 10 members)",
             description: "Collaborative intelligence for Networks & VC Firms.",
             features: [
